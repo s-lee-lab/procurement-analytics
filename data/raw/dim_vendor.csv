@@ -1,0 +1,42 @@
+Vendor_ID,Vendor_Name,Vendor_Category,Region,Vendor_Start_Date,Vendor_Status
+V001,Pioneer Hardware Group,IT Equipment,Northeast US,2015-04-16,Active
+V002,Anchor Solutions,IT Equipment,West US,2010-12-23,Active
+V003,Crestline Technologies,IT Equipment,International,2010-08-15,Active
+V004,Marbleton Hardware Group,IT Equipment,Northeast US,2010-01-20,Active
+V005,Brookfield Technologies,IT Equipment,Northeast US,2017-11-22,Active
+V006,Ashford Systems,IT Equipment,West US,2020-09-26,Active
+V007,Greenway Hardware Group,IT Equipment,Southeast US,2019-05-10,Active
+V008,Union Hardware Group,IT Equipment,Southeast US,2021-05-27,Active
+V009,Keystone Manufacturing Co.,Manufacturing,Midwest US,2019-05-04,Active
+V010,Ivory Peak Manufacturing Co.,Manufacturing,Northeast US,2015-09-24,Active
+V011,Silverline Manufacturing Co.,Manufacturing,West US,2022-04-14,Active
+V012,Elmwood Components Inc.,Manufacturing,Southwest US,2021-07-08,Active
+V013,Westbrook Components Inc.,Manufacturing,West US,2018-03-27,Active
+V014,Lighthouse Industrial Group,Manufacturing,Southeast US,2019-10-19,Active
+V015,Harborview Components Inc.,Manufacturing,West US,2013-05-24,Active
+V016,Kingsley Components Inc.,Manufacturing,Southeast US,2018-01-31,Active
+V017,Lakeside Cloud Systems,Software,Northeast US,2020-12-18,Active
+V018,Copperline Digital Solutions,Software,West US,2019-06-01,Active
+V019,Sterling Software Inc.,Software,West US,2014-05-16,Active
+V020,Trailhead Software Group,Software,Northeast US,2010-08-05,Active
+V021,Pinnacle Software Inc.,Software,International,2010-12-17,Active
+V022,Highpoint Software Group,Software,Southeast US,2020-07-02,Active
+V023,Northfield Trading Co.,Office Supplies,International,2022-12-06,Active
+V024,Fairview Business Supply,Office Supplies,Southwest US,2011-10-11,Active
+V025,Overland Supply Co.,Office Supplies,Southwest US,2016-04-23,Active
+V026,Fieldstone Office Partners,Office Supplies,Southeast US,2019-07-29,Active
+V027,Palisade Supply Co.,Office Supplies,Northeast US,2015-09-25,Active
+V028,Juniper Building Services,Facilities,Southeast US,2016-02-08,Active
+V029,Vertex Facilities Services,Facilities,Northeast US,2021-01-30,Active
+V030,Summit Maintenance Group,Facilities,Southwest US,2020-02-15,Active
+V031,Oakridge Maintenance Group,Facilities,Southwest US,2017-01-21,Active
+V032,Dunmore Facility Partners,Facilities,International,2018-04-02,Active
+V033,Beacon Advisory Partners,Professional Services,International,2016-01-05,Active
+V034,Ironclad Professional Services,Professional Services,West US,2013-03-06,Active
+V035,Redwood Consulting Group,Professional Services,Midwest US,2017-06-11,Active
+V036,Bright Path Consulting Group,Professional Services,Southeast US,2010-07-31,Active
+V037,Cascade Consulting Group,Professional Services,Northeast US,2021-05-30,Active
+V038,Granite Freight Services,Logistics,Midwest US,2021-06-28,Active
+V039,Meridian Logistics Inc.,Logistics,International,2011-06-22,Active
+V040,Northgate Transport Co.,Logistics,International,2018-03-13,Active
+V041,Pioneer Transport Co.,Logistics,West US,2017-07-21,Active

@@ -1,0 +1,108 @@
+Product_ID,Product_Name,Product_Category,Subcategory,Standard_Cost,Unit_of_Measure
+P0001,ProBook 14,IT Equipment,Laptops,1261.81,Each
+P0002,ProBook 15,IT Equipment,Laptops,2126.07,Each
+P0003,EliteBook X1,IT Equipment,Laptops,1797.99,Each
+P0004,ThinkLine T4,IT Equipment,Laptops,1597.99,Each
+P0005,AeroBook Air,IT Equipment,Laptops,934.03,Each
+P0006,WorkStation Mobile 17,IT Equipment,Laptops,933.99,Each
+P0007,UltraView 24,IT Equipment,Monitors,147.88,Each
+P0008,UltraView 27,IT Equipment,Monitors,535.76,Each
+P0009,ClearScreen 32 Curved,IT Equipment,Monitors,408.54,Each
+P0010,VisionPro 24,IT Equipment,Monitors,459.87,Each
+P0011,VisionPro 27,IT Equipment,Monitors,129.88,Each
+P0012,DockPro USB-C,IT Equipment,Docking Stations,215.19,Each
+P0013,DockLink Dual HDMI,IT Equipment,Docking Stations,193.19,Each
+P0014,DockMax Universal,IT Equipment,Docking Stations,93.97,Each
+P0015,DockLite Compact,IT Equipment,Docking Stations,89.09,Each
+P0016,Switch 24-Port,IT Equipment,Networking Equipment,764.41,Each
+P0017,Switch 48-Port,IT Equipment,Networking Equipment,1169.21,Each
+P0018,WiFi Access Point AX,IT Equipment,Networking Equipment,1907.93,Each
+P0019,Firewall Appliance,IT Equipment,Networking Equipment,1597.02,Each
+P0020,Router Enterprise,IT Equipment,Networking Equipment,1125.62,Each
+P0021,Network Cable Bundle Cat6,IT Equipment,Networking Equipment,2199.71,Each
+P0022,Wireless Mouse,IT Equipment,Peripherals,33.83,Each
+P0023,Mechanical Keyboard,IT Equipment,Peripherals,54.44,Each
+P0024,Webcam HD,IT Equipment,Peripherals,64.46,Each
+P0025,USB Headset,IT Equipment,Peripherals,76.57,Each
+P0026,Docking Cable Kit,IT Equipment,Peripherals,121.0,Each
+P0027,Office Suite Standard,Software,Productivity Licenses,119.89,License
+P0028,Office Suite Pro,Software,Productivity Licenses,229.98,License
+P0029,Cloud Storage Plan,Software,Productivity Licenses,257.35,License
+P0030,Email Platform Plan,Software,Productivity Licenses,66.26,License
+P0031,Endpoint Protection,Software,Security Licenses,395.92,License
+P0032,VPN License,Software,Security Licenses,168.67,License
+P0033,Identity Management Suite,Software,Security Licenses,113.83,License
+P0034,Firewall Software License,Software,Security Licenses,573.42,License
+P0035,BI Platform License,Software,Analytics Licenses,1455.32,License
+P0036,Data Warehouse Add-on,Software,Analytics Licenses,1250.92,License
+P0037,Reporting Suite License,Software,Analytics Licenses,596.0,License
+P0038,PM Tool Standard,Software,Project-Management Licenses,60.51,License
+P0039,PM Tool Enterprise,Software,Project-Management Licenses,183.69,License
+P0040,Collaboration Suite License,Software,Project-Management Licenses,132.43,License
+P0041,Copy Paper Letter,Office Supplies,Paper,4.1,Case
+P0042,Copy Paper Legal,Office Supplies,Paper,7.46,Case
+P0043,Cardstock Paper,Office Supplies,Paper,3.31,Case
+P0044,Toner Cartridge Black,Office Supplies,Toner,167.3,Each
+P0045,Toner Cartridge Color Set,Office Supplies,Toner,76.23,Each
+P0046,Drum Unit Replacement,Office Supplies,Toner,132.75,Each
+P0047,Ink Cartridge Set,Office Supplies,Toner,83.64,Each
+P0048,Shipping Label Roll,Office Supplies,Labels,23.2,Box
+P0049,Barcode Label Set,Office Supplies,Labels,24.13,Box
+P0050,Address Label Pack,Office Supplies,Labels,11.47,Box
+P0051,Office Chair Ergonomic,Office Supplies,Furniture,1165.93,Each
+P0052,Standing Desk,Office Supplies,Furniture,948.15,Each
+P0053,Filing Cabinet,Office Supplies,Furniture,1132.24,Each
+P0054,Conference Table,Office Supplies,Furniture,1082.21,Each
+P0055,Cubicle Panel Kit,Office Supplies,Furniture,749.65,Each
+P0056,HVAC Preventive Maintenance,Facilities,HVAC Maintenance,2777.34,Service
+P0057,HVAC Filter Replacement Service,Facilities,HVAC Maintenance,402.2,Service
+P0058,HVAC Emergency Repair,Facilities,HVAC Maintenance,708.55,Service
+P0059,Electrical Panel Repair,Facilities,Electrical Repair,208.55,Service
+P0060,Lighting Retrofit Service,Facilities,Electrical Repair,880.79,Service
+P0061,Wiring Inspection Service,Facilities,Electrical Repair,1032.83,Service
+P0062,Nightly Cleaning Service,Facilities,Janitorial Services,1502.48,Service
+P0063,Deep Cleaning Service,Facilities,Janitorial Services,4177.94,Service
+P0064,Window Cleaning Service,Facilities,Janitorial Services,1912.42,Service
+P0065,Cleaning Supplies Bundle,Facilities,Facility Supplies,49.33,Each
+P0066,Restroom Supplies Bundle,Facilities,Facility Supplies,85.98,Each
+P0067,Safety Signage Kit,Facilities,Facility Supplies,29.73,Each
+P0068,Break Room Supplies,Facilities,Facility Supplies,122.31,Each
+P0069,Circuit Board Assembly,Manufacturing,Components,39.13,Each
+P0070,Resistor Pack,Manufacturing,Components,493.47,Each
+P0071,Capacitor Pack,Manufacturing,Components,386.58,Each
+P0072,Wiring Harness,Manufacturing,Components,100.96,Each
+P0073,Fastener Kit,Manufacturing,Components,4.75,Each
+P0074,Sensor Module,Manufacturing,Components,408.1,Each
+P0075,Power Supply Unit,Manufacturing,Components,354.01,Each
+P0076,Connector Set,Manufacturing,Components,365.05,Each
+P0077,Adhesive Bulk Pack,Manufacturing,Production Supplies,232.52,Each
+P0078,Lubricant Drum,Manufacturing,Production Supplies,26.84,Each
+P0079,Protective Packaging,Manufacturing,Production Supplies,110.75,Each
+P0080,Assembly Line Tooling,Manufacturing,Production Supplies,39.18,Each
+P0081,Safety Gloves Case,Manufacturing,Production Supplies,259.62,Each
+P0082,Cleanroom Supplies,Manufacturing,Production Supplies,188.87,Each
+P0083,CNC Machine Part,Manufacturing,Equipment-Related Purchases,8607.0,Each
+P0084,Conveyor Belt System,Manufacturing,Equipment-Related Purchases,2057.18,Each
+P0085,Industrial Robot Arm Component,Manufacturing,Equipment-Related Purchases,8119.07,Each
+P0086,Assembly Press Unit,Manufacturing,Equipment-Related Purchases,8466.99,Each
+P0087,Forklift Attachment,Manufacturing,Equipment-Related Purchases,18375.35,Each
+P0088,Process Improvement Consulting,Professional Services,Consulting,259.39,Hour
+P0089,Strategy Consulting,Professional Services,Consulting,321.8,Hour
+P0090,Systems Integration Consulting,Professional Services,Consulting,218.05,Hour
+P0091,Compliance Consulting,Professional Services,Consulting,129.9,Hour
+P0092,IT Helpdesk Support,Professional Services,Technical Support,195.52,Hour
+P0093,Network Support Retainer,Professional Services,Technical Support,204.55,Hour
+P0094,Software Support Contract,Professional Services,Technical Support,166.64,Hour
+P0095,On-site Technical Support,Professional Services,Technical Support,206.48,Hour
+P0096,Leadership Training Program,Professional Services,Training,4203.47,Session
+P0097,Technical Skills Training,Professional Services,Training,4420.5,Session
+P0098,Compliance Training Program,Professional Services,Training,3706.56,Session
+P0099,Domestic Freight Service,Logistics,Freight,398.27,Shipment
+P0100,International Freight Service,Logistics,Freight,1041.55,Shipment
+P0101,Expedited Freight Service,Logistics,Freight,445.15,Shipment
+P0102,Ground Shipping Service,Logistics,Shipping,325.48,Shipment
+P0103,Air Shipping Service,Logistics,Shipping,170.89,Shipment
+P0104,Bulk Shipping Service,Logistics,Shipping,264.11,Shipment
+P0105,Warehouse Storage - Standard,Logistics,Warehousing,5473.13,Month
+P0106,Warehouse Storage - Climate Controlled,Logistics,Warehousing,1720.97,Month
+P0107,Cross-Dock Handling Service,Logistics,Warehousing,2639.18,Month

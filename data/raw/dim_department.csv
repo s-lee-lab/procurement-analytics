@@ -1,0 +1,10 @@
+Department_ID,Department,Group
+D01,IT,Technology
+D02,Operations,Operations
+D03,Finance,Corporate
+D04,Human Resources,Corporate
+D05,Facilities,Operations
+D06,Sales,Revenue
+D07,Marketing,Revenue
+D08,Engineering,Product
+D09,Manufacturing,Production
