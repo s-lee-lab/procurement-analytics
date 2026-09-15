@@ -84,6 +84,25 @@ ORDER BY cnt DESC;
 
 
 -- ----------------------------------------------------------------------------
--- 5. Invalid dates — NOT YET WRITTEN
--- TODO: malformed Order_Date values, and Actual_Delivery_Date before Order_Date.
+-- 5. Invalid dates
+-- TRY_CONVERT returns NULL if the text can't be parsed as a real date at all
+-- (e.g. "2024-13-45" — invalid month/day). We exclude truly blank values from
+-- this check, since a blank date is a MISSING VALUE issue (already counted in
+-- section 2), not a malformed-text issue — these are two different bugs.
+-- Expected: ~13-16 malformed Order_Date values.
 -- ----------------------------------------------------------------------------
+SELECT COUNT(*) AS malformed_order_date
+FROM stg_fact_purchase_orders
+WHERE TRY_CONVERT(DATE, Order_Date) IS NULL AND Order_Date <> '';
+-- Result: 16 (all showing the same injected bad value: "2024-13-45")
+ 
+-- Actual_Delivery_Date before Order_Date is physically impossible — a delivery
+-- can't happen before the order was placed. Blank Actual_Delivery_Date is
+-- excluded because it's the expected/normal state for Open and Cancelled
+-- orders, not an error (see DATA_DICTIONARY.md assumptions).
+-- Expected: ~13 rows.
+SELECT COUNT(*) AS delivery_before_order
+FROM stg_fact_purchase_orders
+WHERE TRY_CONVERT(DATE, Actual_Delivery_Date) < TRY_CONVERT(DATE, Order_Date)
+  AND Actual_Delivery_Date <> '';
+-- Result: 13
