@@ -40,20 +40,33 @@ operational improvement — **investigation candidates, not proven verdicts.**
 Core: Excel/Power Query → SQL → Power BI. Supporting: Python (for realistic
 synthetic data generation only — not the centerpiece of the portfolio story).
 
+## Fact table grain
+`fact_purchase_orders` is grain = **one row per purchase-order line item**.
+A single PO (`PO_ID`) may span multiple rows. All KPIs below are defined
+explicitly against this grain to avoid ambiguity — e.g. a PO can have some
+lines delivered on time and others late, so "PO delivered on time" is not
+a well-defined statement without specifying line-level vs. PO-level scope.
+
 ## KPI definitions (see DATA_DICTIONARY.md for calculated-field detail)
 - **Total Procurement Spend** = Σ(Quantity × Unit_Price), Completed PO lines only.
-- **PO Count** = distinct PO_ID among Completed POs.
+- **PO Count** = COUNT(DISTINCT PO_ID) among Completed POs. Counts unique
+  purchase orders, not line items — distinct from any line-level KPI below.
 - **Active Vendors** = distinct vendors with Completed purchasing activity.
 - **Average PO Value** = Total completed spend ÷ completed PO count.
-- **On-Time Delivery %** = Completed POs, valid dates, delivered ≤ Expected_Delivery_Date.
-- **Average Days Late** = average delay among late Completed orders only.
+- **On-Time Delivery %** = (number of Completed PO **lines** delivered on or
+  before Expected_Delivery_Date) ÷ (number of Completed PO **lines** with
+  valid Expected and Actual delivery dates). Calculated at PO-line grain,
+  matching the fact table — not at the PO level.
+- **Average Days Late** = average delay (Actual − Expected) among late
+  Completed PO **lines** only, restricted to lines with valid dates.
 - **Vendor Spend Share** = vendor completed spend ÷ total completed spend.
 - **Price Variance** = observed unit price vs. a product-level benchmark
   (median-based benchmark preferred; final choice made after inspecting data).
 
 ## Inclusion rules
-- Spend KPIs: **Completed** POs only.
-- Delivery KPIs: **Completed** POs with valid Expected and Actual dates.
+- Spend KPIs: **Completed** PO lines only.
+- Delivery KPIs: **Completed** PO lines with valid Expected and Actual dates,
+  evaluated at line grain (see On-Time Delivery % and Average Days Late above).
 - Open/Cancelled orders excluded from spend & delivery KPIs but retained for
   separate operational analysis.
 
