@@ -92,3 +92,19 @@ the start rather than needing a retroactive fix.
 
 **Status:** Applied to PROJECT_SPEC.md directly (no schema or generator
 changes required — this was a definitions-only fix).
+
+---
+
+## 2026-09-19 — Removed CHANGELOG.md
+
+**Decision:** Delete `CHANGELOG.md` from the repo.
+
+**Why:** On review, CHANGELOG.md was duplicating content already covered
+by DECISIONS.md (same bug narratives, same specifics) rather than serving
+a distinct purpose. Commit history (`git log`) already provides the
+mechanical "what changed, when" record; DECISIONS.md carries the
+reasoning and context. Maintaining a third overlapping history added no
+value.
+
+**Fix:** Removed CHANGELOG.md. Going forward, chronological "what
+happened" lives in commit history; "why" lives here in DECISIONS.md.
