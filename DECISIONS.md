@@ -54,3 +54,41 @@ generator (section 16 of PROJECT_SPEC).
 **Status:** Checkpoint 2 (data generated and validated) — see
 `documentation/methodology.md` for the full inspection report. Provisionally
 **PASSED**, pending your review of the numbers below.
+
+---
+
+## 2026-09-18 — KPI grain clarification: delivery metrics defined at PO-line level
+
+**Decision:** Clarify PROJECT_SPEC.md's KPI definitions to explicitly state
+that delivery metrics operate at the PO-line grain, matching the fact table,
+rather than leaving "PO" ambiguous between "purchase order" and "PO line."
+
+**What we found:** External review flagged that phrases like "Completed POs,
+delivered ≤ Expected_Delivery_Date" don't define what happens when a single
+PO_ID has multiple lines with different delivery outcomes (e.g. PO-1801:
+Component A on time, Component B late, Component C on time). Since the fact
+table grain is one row per PO line, and a PO can span multiple lines, "PO
+delivered on time" was not a well-defined statement as written.
+
+**Fix:** Updated PROJECT_SPEC.md to:
+- Add an explicit "Fact table grain" section stating the grain and why it
+  matters for delivery KPIs specifically.
+- Reword **On-Time Delivery %** and **Average Days Late** to say "PO lines"
+  instead of "POs," making clear these are calculated at line grain.
+- Reword **PO Count** to explicitly show `COUNT(DISTINCT PO_ID)` and note it
+  is a separate, PO-level metric — not to be confused with the line-level
+  delivery KPIs.
+- Updated the Inclusion Rules section to match ("Completed PO lines" instead
+  of "Completed POs" for delivery).
+
+**Why this matters for the project's credibility:** the underlying data and
+fact-table design were already correct — this was a documentation-clarity
+gap, not a design flaw. But if the SQL/DAX for On-Time Delivery % is written
+at line grain while the spec's wording implies PO grain, that's exactly the
+kind of inconsistency an interviewer would probe on. Fixing the wording now,
+before `02_data_cleaning.sql` and the analytical SQL scripts are written,
+means every downstream query is built against an unambiguous definition from
+the start rather than needing a retroactive fix.
+
+**Status:** Applied to PROJECT_SPEC.md directly (no schema or generator
+changes required — this was a definitions-only fix).
