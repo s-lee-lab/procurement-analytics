@@ -124,6 +124,10 @@ FROM stg_fact_purchase_orders
 GROUP BY PO_Line_ID
 HAVING COUNT(DISTINCT CONCAT(PO_ID, '|', Vendor_ID, '|', Product_ID, '|', Department_ID, '|', Order_Date, '|', Expected_Delivery_Date, '|', Actual_Delivery_Date, '|', Quantity, '|', Unit_Price, '|', Currency, '|', PO_Status)) > 1
 ORDER BY distinct_versions DESC;
--- 9 collisions found. 8 are near-duplicates where one copy is just missing/
--- malformed one field (see DECISIONS.md). 1 (L014440) is a real conflict
--- between two valid-looking values with no way to tell which is correct.
+-- 9 collisions found. All 9 are resolvable near-duplicates: in each pair, one
+-- copy is missing/malformed a field (or has an impossible Actual_Delivery_Date
+-- before Order_Date), while the other copy is valid. L014440 was initially
+-- misread as an unresolvable conflict between two valid dates — closer
+-- inspection showed one of its two dates was actually before the row's own
+-- Order_Date, which is impossible, so it resolves the same way as the rest
+-- (see DECISIONS.md for the correction).
