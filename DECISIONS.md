@@ -107,7 +107,7 @@ commit history, "why" lives here.
 
 ---
 
-## 2026-09-20 — New finding: PO_Line_ID collisions (9 cases)
+## 2026-10-04 — New finding: PO_Line_ID collisions (9 cases)
 
 **Decision:** Extended `01_data_quality.sql`'s duplicate check to also
 catch PO_Line_ID values that repeat with genuinely different data
@@ -143,7 +143,7 @@ in `02_data_cleaning.sql`.
 
 ---
 
-## 2026-09-20 — Correction: L014440 is resolvable, not a genuine conflict
+## 2026-10-04 — Correction: L014440 is resolvable, not a genuine conflict
 
 **Decision:** Revise the entry above — L014440 was incorrectly
 classified as an unresolvable value conflict.
@@ -171,7 +171,7 @@ so the wrong version never made it into the actual pipeline.
 
 ---
 
-## 2026-09-20 — Checkpoint 3: 02_data_cleaning.sql built and verified
+## 2026-10-04 — Checkpoint 3: 02_data_cleaning.sql built and verified
 
 **Decision:** Build `dbo.fact_purchase_orders` from
 `stg_fact_purchase_orders` — dedup, PO_Line_ID collision resolution,
@@ -210,9 +210,52 @@ PO_Status standardization, all in one script.
 **Note:** mid-build, the INSERT was accidentally run 5 times (97,895
 rows instead of 19,579) before being caught by cross-checking the row
 count against the Currency/PO_Status group-by totals. Fixed via
-TRUNCATE + single re-run. Left here as a reminder that INSERT isn't
-idempotent — re-running it doesn't overwrite, it adds on top.
+TRUNCATE + single re-run. INSERT isn't idempotent: re-running it
+doesn't overwrite, it adds on top. **Permanent fix:** every table in
+`02_data_cleaning.sql` now starts with `DROP TABLE IF EXISTS`, so the
+whole script can be re-run safely and always rebuilds from scratch.
 
-**Status:** `dbo.fact_purchase_orders` complete and verified. Remaining
-for Checkpoint 3: build the four dimension tables (dim_vendor,
-dim_product, dim_department, dim_date) the same way.
+**Status:** `dbo.fact_purchase_orders` complete and verified. The four
+dimension tables are covered in the entry below.
+
+---
+
+## 2026-10-19 — Dimension tables built (dim_department, dim_vendor, dim_product, dim_date)
+
+**Decision:** Build the four dimension tables from their staging tables
+with real types and primary keys, using DROP/CREATE/INSERT so the
+script is safe to re-run.
+
+**What we checked first:** duplicate IDs, blank/NULL fields, values that
+fail type conversion, stray whitespace, spelling consistency in
+categorical columns, date-table coverage, and orphan keys (fact rows
+with no matching dimension row).
+
+**Findings:** none. All four dimension tables were clean: no duplicate
+IDs, no blanks, no failed conversions, no padded text, no spelling
+variants in any categorical column, a complete 731-day date range
+(2024-01-01 to 2025-12-31), and zero orphan keys between the fact table
+and each dimension. The data-quality issues in this project were
+injected into the fact data only.
+
+**Approach:** unlike the fact table, no dedup or collision logic was
+needed. Text columns are trimmed on load; dates, costs, and calendar
+numbers are converted to real types. Primary keys on each dimension's
+ID column act as a safeguard, so a duplicate ID would make the load
+fail instead of loading silently.
+
+**Verified:** row counts of 9 / 41 / 107 / 731, no NULLs introduced by
+conversion. The full `02_data_cleaning.sql` was then re-run top to
+bottom and reproduced all five row counts (19,579 / 9 / 41 / 107 / 731).
+
+**Things to remember for analysis:**
+- All 41 vendors are Active, so Vendor_Status can't distinguish vendors.
+  Vendor comparisons have to come from delivery and pricing behavior.
+- Vendor_Category and Product_Category share the same 7 labels, so
+  category-level spend analysis needs no mapping.
+- dim_date's Week column appears to count simple 7-day blocks from
+  January 1, not ISO weeks. Fine for this project, but worth checking
+  before using it in any week-over-week analysis.
+
+**Status:** Checkpoint 3 (SQL cleaning) complete. Next:
+`03_spend_analysis.sql`.
