@@ -206,5 +206,6 @@ JOIN dbo.dim_date d ON f.Order_Date = d.[Date]
 WHERE f.PO_Status IN ('Completed', 'Open') AND f.Quantity > 0 AND f.Unit_Price > 0
 GROUP BY d.[Year]
 ORDER BY d.[Year];
--- Result: (run and paste). Adding the monthly figures from section 9 by hand
--- gives roughly $260.2M for 2024 and $272.2M for 2025 (about +4.6%).
+-- Result: 2024 = $260,173,518.73 | 2025 = $272,185,723.63 | +4.62% YoY on
+-- ordered spend (Completed + Open). Compare +1.53% on Completed-only spend
+-- (section 2), which is understated by the end-of-data effect.
