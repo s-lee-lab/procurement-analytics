@@ -7,10 +7,12 @@
 -- fact_purchase_orders: drops exact-duplicate rows, resolves PO_Line_ID
 -- collisions (same ID, different data), converts columns to real types via
 -- TRY_CAST/TRY_CONVERT, and standardizes Currency and PO_Status. Invalid
--- values on otherwise-unique rows (negative price, zero quantity, malformed
--- dates) are NOT deleted: they convert to NULL and the row stays. Only rows
--- with a confirmed intact duplicate/collision backup elsewhere in the data
--- get removed. See DECISIONS.md for full rationale.
+-- values on otherwise-unique rows are NOT deleted, so the row and its other
+-- real data stay. Malformed values (e.g. the impossible date "2024-13-45")
+-- convert to NULL; negative and zero numeric values convert normally and are
+-- excluded at analysis time. Only rows with a confirmed intact
+-- duplicate/collision backup elsewhere in the data get removed. See
+-- DECISIONS.md for full rationale.
 --
 -- dim_department / dim_vendor / dim_product / dim_date: audited clean, so
 -- these only need trimming, real types, and primary keys.
