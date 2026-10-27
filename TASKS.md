@@ -31,14 +31,18 @@
 - [x] Verify dimension tables clean, incl. zero orphan keys vs. the fact table
 - [x] Remove CHANGELOG.md (redundant with DECISIONS.md and commit history)
 - [x] GitHub profile: bio, profile README, portfolio landing page
+- [x] Update README.md (status, repo structure, reproduction steps)
+- [x] `sql/03_spend_analysis.sql` — first JOINs and KPIs. Total completed
+      spend $499.65M, 8,014 POs, 41 vendors; spend by year, month,
+      department, category, subcategory; totals reconcile to the cent.
+      Found the end-of-data artifact (Dec 2025 dip) — see DECISIONS.md
 
 ## CURRENT
-- [ ] `sql/03_spend_analysis.sql` — first JOINs and first KPIs: Total
-      Procurement Spend, spend over time, spend by department and category
+- [ ] `sql/04_vendor_performance.sql` — vendor spend share and concentration
+      (top-N share, cumulative %), then On-Time Delivery % and Average Days
+      Late at PO-line grain
 
 ## NEXT
-- [ ] `sql/04_vendor_performance.sql` — vendor spend share and concentration,
-      On-Time Delivery %, Average Days Late (PO-line grain)
 - [ ] `sql/05_pricing_analysis.sql` — price variance vs. product-level benchmark
 - [ ] `sql/06_opportunity_analysis.sql` — pull the above into investigation
       candidates
@@ -50,10 +54,23 @@
       voice once each part is genuinely understood)
 - [ ] Final portfolio audit (Checkpoint 7)
 
-## HOUSEKEEPING
-- [ ] Update README.md: status section (SQL cleaning done), repo structure
-      (remove CHANGELOG.md, list the actual sql/ files)
-- [ ] Decide on `data/cleaned/`: export the 5 cleaned tables as CSVs, or
-      remove the folder from the README tree
-- [ ] Revisit the ~$250M/yr spend assumption once real spend analysis exists
+## CARRY FORWARD (from the spend analysis)
+- [ ] Run section 10 of `03_spend_analysis.sql` and paste the result into its
+      comment, replacing the hand-added ~+4.6% figure (also in DECISIONS.md)
+- [ ] Dashboard: flag or footnote the last 1-2 months of trend visuals (Open
+      orders not yet delivered make recent Completed spend look low), and show
+      Open spend as pipeline
+- [ ] Operational analysis: about $12.3M of 2024 orders are still Open at the
+      end of 2025 — worth checking against Expected_Delivery_Date (not a
+      finding yet)
+- [ ] Limitations writeup: Software is 27.9% of spend (~$70M/yr), high for a
+      ~1,000-person manufacturer; likely a generator setting, same family as
+      the ~$250M/yr assumption
 - [ ] Before using dim_date[Week] for anything: confirm it isn't ISO weeks
+
+## DECIDED / PARKED
+- `data/cleaned/`: skipped for now (scripts + raw CSVs rebuild everything).
+  Revisit at Power BI; if exporting CSVs, add a `cleaned/` line back to the
+  README tree and one sentence under "Reproducing the database".
+- ~$250M/yr spend assumption: accepted. Spend analysis supports it
+  ($499.65M over 2 years); the Software share is noted above.
