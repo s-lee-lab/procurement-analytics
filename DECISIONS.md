@@ -282,9 +282,8 @@ spend is about $21.0M, a normal month.
 
 **Impact:** the December 2025 dip is a reporting artifact, not a
 purchasing slowdown. Year-over-year growth on Completed spend (+1.5%) is
-understated; on Completed + Open it is about +4.6% (summed from the
-monthly figures; section 10 of `03_spend_analysis.sql` is the
-cross-check).
+understated; on Completed + Open (ordered spend) it is +4.62%, from $260.17M in 2024 to
+$272.19M in 2025 (section 10 of `03_spend_analysis.sql`).
 
 **Handling:** dashboard trend visuals should flag or footnote the last
 1-2 months, and show Open spend separately as pipeline. Spend KPIs stay
