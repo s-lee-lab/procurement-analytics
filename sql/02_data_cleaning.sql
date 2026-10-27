@@ -49,7 +49,7 @@ GO
 -- (badness_score: NULL/malformed Unit_Price, Quantity, Order_Date,
 -- Expected_Delivery_Date, or Actual_Delivery_Date before Order_Date) +
 -- type conversion + Currency/PO_Status standardization, all in one pass.
--- See DECISIONS.md (2026-09-20 entries) for why each rule exists.
+-- See DECISIONS.md (2026-10-04 entries) for why each rule exists.
 WITH Deduplicated AS (
     SELECT PO_Line_ID, PO_ID, Vendor_ID, Product_ID, Department_ID, Order_Date,
            Expected_Delivery_Date, Actual_Delivery_Date, Quantity, Unit_Price,
