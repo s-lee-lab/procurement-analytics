@@ -11,8 +11,11 @@ explainable, and defensible in an interview.
 ## Company (fictional)
 **Northstar Electronics** — fictional U.S. electronics/technology company,
 ~1,000 employees, multiple U.S. offices, manufacturing/assembly operations
-plus corporate functions (IT, Facilities, Procurement, Finance, etc). Not
-based on, and never to be implied as based on, any real company's data.
+plus corporate functions (IT, Facilities, Procurement, Finance, etc). Because
+it manufactures and assembles its own products, procurement includes large
+production-material and component purchasing, which is why spend (~$250M/yr)
+is high relative to headcount. Not based on, and never to be implied as based
+on, any real company's data.
 
 ## Business problem
 Procurement leadership has visibility into overall spend but lacks a
@@ -65,6 +68,12 @@ a well-defined statement without specifying line-level vs. PO-level scope.
 
 ## Inclusion rules
 - Spend KPIs: **Completed** PO lines only.
+- Spend KPIs also exclude lines with missing, zero, or negative Quantity or
+  Unit_Price (about 1.3% of Completed lines). These rows stay in the cleaned
+  table; each analysis applies the exclusion explicitly.
+- Time-based spend analysis is dated by **Order_Date**. Completed lines with
+  no valid Order_Date (9 lines, about 0.03% of spend) are counted in totals
+  but cannot be placed on a timeline.
 - Delivery KPIs: **Completed** PO lines with valid Expected and Actual dates,
   evaluated at line grain (see On-Time Delivery % and Average Days Late above).
 - Open/Cancelled orders excluded from spend & delivery KPIs but retained for
@@ -84,3 +93,15 @@ Synthetic data has limits. A price difference doesn't automatically mean
 overpayment — it could reflect contract terms, volume discounts, product
 specs, service levels, shipping, negotiated pricing, or timing. Pricing
 anomalies are investigation candidates, not confirmed savings.
+
+- **End-of-data effect.** The dataset ends 2025-12-31. Orders placed late in
+  the window are mostly still Open, so Completed-only spend makes the most
+  recent months look artificially low. Trend visuals flag this, and
+  year-over-year growth on Completed spend is understated (see DECISIONS.md,
+  2026-10-26).
+- **Scale of spend.** Total spend (~$250M/yr) and the category mix (for
+  example, Software at about 28% of spend) come from generator settings, not
+  from any real company's behavior. Spend levels support the analysis, but
+  shouldn't be read as a benchmark of real procurement.
+- **Missing dates.** A small number of lines have no valid Order_Date and
+  drop out of time-based views only.
