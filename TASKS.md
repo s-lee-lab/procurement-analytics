@@ -55,8 +55,6 @@
 - [ ] Final portfolio audit (Checkpoint 7)
 
 ## CARRY FORWARD (from the spend analysis)
-- [ ] Run section 10 of `03_spend_analysis.sql` and paste the result into its
-      comment, replacing the hand-added ~+4.6% figure (also in DECISIONS.md)
 - [ ] Dashboard: flag or footnote the last 1-2 months of trend visuals (Open
       orders not yet delivered make recent Completed spend look low), and show
       Open spend as pipeline
