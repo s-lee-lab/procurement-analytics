@@ -54,7 +54,9 @@ away analytically later.
 
 **Status:** Checkpoint 2 (data generated and validated) — see
 `documentation/methodology.md` for the full inspection report.
-Provisionally **PASSED**.
+**PASSED.** Reviewed and accepted, including the ~$250M/yr spend
+assumption (still flagged as revisitable if it looks off during
+analysis).
 
 ---
 
@@ -188,12 +190,14 @@ PO_Status standardization, all in one script.
 - Currency/PO_Status standardized via CASE WHEN ('US Dollar' → 'USD',
   'Canceled' → 'Cancelled').
 - Raw text values cast to real types (DATE, DECIMAL(10,2)) on insert.
-- Invalid values (negative price, zero quantity, malformed dates on
-  otherwise-unique rows) are NOT deleted — they convert to NULL and the
-  row stays, per the inclusion-rules philosophy in PROJECT_SPEC.md. Only
-  rows with a verified full-row duplicate or a resolvable ID collision
-  get removed, since those are the only cases where a row is confirmed
-  to have an intact "backup" elsewhere in the data.
+- Invalid values on otherwise-unique rows are NOT deleted, per the
+  inclusion-rules philosophy in PROJECT_SPEC.md. Malformed text (e.g.
+  the impossible date "2024-13-45") converts to NULL; negative and zero
+  numeric values (Quantity, Unit_Price) convert normally and stay in the
+  table as-is, so analysis queries exclude them explicitly. Only rows
+  with a verified full-row duplicate or a resolvable ID collision get
+  removed, since those are the only cases where a row is confirmed to
+  have an intact "backup" elsewhere in the data.
 
 **Verified:**
 - Final row count: 19,579 (19,716 − 128 duplicates − 9 collision-pair
@@ -259,3 +263,55 @@ bottom and reproduced all five row counts (19,579 / 9 / 41 / 107 / 731).
 
 **Status:** Checkpoint 3 (SQL cleaning) complete. Next:
 `03_spend_analysis.sql`.
+
+---
+
+## 2026-10-26 — Spend analysis: end-of-data artifact in Completed-only spend
+
+**Decision:** Keep the Completed-only definition for spend KPIs
+(PROJECT_SPEC.md), but document and flag the effect it has on the most
+recent months.
+
+**What we found:** Monthly Completed spend runs about $17M-$27M, then
+drops to $11.9M in December 2025 (197 POs vs. 300-400 in a normal
+month). Total order lines that month (863) are in line with September
+and October (910, 929), but Open lines jump from 30 (Sep) to 387 (Dec).
+Orders placed late in the window haven't been delivered by the data's
+end date, so they never reach Completed. December Completed + Open
+spend is about $21.0M, a normal month.
+
+**Impact:** the December 2025 dip is a reporting artifact, not a
+purchasing slowdown. Year-over-year growth on Completed spend (+1.5%) is
+understated; on Completed + Open it is about +4.6% (summed from the
+monthly figures; section 10 of `03_spend_analysis.sql` is the
+cross-check).
+
+**Handling:** dashboard trend visuals should flag or footnote the last
+1-2 months, and show Open spend separately as pipeline. Spend KPIs stay
+on Completed lines only.
+
+**Also noted:**
+- Completed spend totals $499.65M (about 0.7% below the ~$503M
+  generator estimate, consistent with duplicates and invalid lines
+  being removed). Average PO value is $62,347 across 8,014 POs and 41
+  vendors.
+- The validity rule (Quantity > 0 AND Unit_Price > 0) excludes at most
+  239 of 17,739 Completed lines (about 1.3%).
+- 9 Completed lines ($163,568) have a NULL Order_Date and drop out of
+  time-based queries only. Yearly spend plus that amount reconciles to
+  the total to the cent.
+- About $12.3M of 2024 orders are still Open at the end of 2025. That is
+  a question for the operational analysis, not a finding yet.
+- Software is 27.9% of spend (about $70M/yr), which is high for a
+  ~1,000-person manufacturer. It likely reflects generator settings, in
+  the same family as the ~$250M/yr assumption, and belongs in the
+  limitations section of the final writeup.
+
+**Correction to an earlier statement:** the Checkpoint 3 entry
+originally said invalid values convert to NULL. Only malformed text
+does; negative and zero numbers stay in the table and are excluded at
+analysis time. That entry and the `02_data_cleaning.sql` header were
+corrected.
+
+**Status:** `03_spend_analysis.sql` complete. Next:
+`04_vendor_performance.sql`.
