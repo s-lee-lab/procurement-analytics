@@ -314,3 +314,47 @@ corrected.
 
 **Status:** `03_spend_analysis.sql` complete. Next:
 `04_vendor_performance.sql`.
+
+---
+
+## 2026-11-02 — Vendor performance: delivery KPIs and a calendar-coverage gap
+
+**Decision:** Compute delivery KPIs at PO-line grain on Completed lines
+with valid Expected and Actual dates, and never join delivery dates to
+dim_date.
+
+**What we found (investigation candidates, not verdicts):**
+- Spend is moderately concentrated: the top 10 of 41 vendors hold 56.8%
+  of spend, 19 vendors cover 80%, HHI is 439 (even split ~244). No
+  vendor or category is dominated by one supplier (largest category
+  leader: 37.9%).
+- 8 single-source products hold 4.9% of spend; three consulting and
+  software products hold about 87% of that.
+- Overall on-time delivery is 75.8%, with 12.6 days late on average when
+  late. About half of late lines are 8+ days late.
+- On-time varies from 52.8% to 97.2% by vendor, much more than by
+  category (66%-82%), department (72%-79%) or region (Midwest is high
+  only because it holds 3 vendors, including the best large vendor).
+  This suggests delivery is mostly a vendor effect. That is a
+  hypothesis; it was not tested statistically.
+- The 15 vendors under 70% on-time hold 33.2% of spend.
+
+**Exclusions:** 79 Completed lines have no Expected date and 12 were
+delivered before the order date. They are excluded at query time, not
+deleted (17,648 of 17,739 lines are usable).
+
+**Calendar gap:** orders stop on 2025-12-31, but Completed deliveries run
+to 2026-04-19, and dim_date ends 2025-12-31. An inner join of delivery
+dates to dim_date silently dropped 158 lines (17,490 instead of 17,648).
+Fixed by deriving the delivery month from the date itself. This also
+corrects an earlier assumption: the data's real snapshot date is later
+than the last order date. The December 2025 conclusion in the 2026-10-26
+entry still holds.
+
+**Caveats:** only delivered lines can be measured, so late orders still
+Open don't count against any vendor. The 2026 delivery months show very
+low on-time rates on tiny samples, most likely late-2025 orders that
+slipped; treat them with caution.
+
+**Status:** `04_vendor_performance.sql` complete except Section 12's
+2026-04-19 results. Next: `05_pricing_analysis.sql`.
