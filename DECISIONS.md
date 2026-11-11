@@ -393,24 +393,35 @@ slipped; treat them with caution.
 
 ## 2026-11-10 — Open-order aging: Open status is a generator artifact, not a backlog finding
 
-**Decision:** Treat overdue Open lines as an illustrative past-due report, not a business finding, and use 2025-12-31 as the reference date for Open-order aging.
+**Decision:** Keep the overdue Open-line analysis (Section 12 of
+`04_vendor_performance.sql`) as an illustrative past-due report, not a
+business finding. Age Open lines as of 2025-12-31 (primary view) and
+2026-04-19 (sensitivity).
 
-**What we found:** Aged against an April 2026 snapshot, 1,216 Open lines
-($32.86M) are 30+ days past Expected_Delivery_Date; 729 lines ($20.4M)
-are 180+ days overdue.
+**Why two reference dates:** PO_Status was assigned by the generator as
+of 2025-12-31, but Completed lines carry delivery dates through
+2026-04-19 (the latest Completed Actual_Delivery_Date, which is how the
+query derives its as-of date). These can't describe the same moment, so
+both views are shown. This revises the 2026-11-02 wording about a "later
+snapshot": it's a generator inconsistency.
+
+**Results (1,216 Open lines with an expected date, $32,855,041):**
+- As of 2025-12-31: 151 lines ($4.34M) not yet due; 1,065 lines
+  ($28.51M) overdue — 260 / $6.29M at 1-30 days, 103 / $2.42M at 31-90,
+  100 / $2.91M at 91-180, 602 / $16.89M at 180+.
+- As of 2026-04-19: all 1,216 lines overdue — 15 / $0.94M at 31-90,
+  472 / $11.50M at 91-180, 729 / $20.42M at 180+.
 
 **Why it isn't a finding:** in `generate_data.py`, PO_Status is drawn by
-order recency only: 60% Open in the last 20 days of the window, 20% for
-the next 25 days, 4% for everything older. Vendor and expected delivery
-date play no role. The large 91–180 bucket is the recent-order Open rate
-measured against a later snapshot; the 180+ bucket is the flat 4% on old
-orders, which nothing ever closes.
-
-**Snapshot correction:** status reflects 2025-12-31, but Completed lines
-carry delivery dates to 2026-04-19. This is a generator inconsistency,
-not a real later snapshot (revises the 2026-11-02 wording).
+order recency only (60% Open in the last 20 days of the window, 20% for
+the next 25 days, 4% for everything older). Vendor and expected delivery
+date play no role, so the 180+ lines are old orders the generator never
+closes, and the recent buckets are the recency-based Open rate measured
+against a reference date. The top 10 vendors by overdue Open spend hold
+56.7% of overdue spend at 12/31, close to their overall spend share
+(56.8%), consistent with the ranking reflecting vendor size, not vendor
+behavior. Vendor on-time % is unaffected (Completed lines only).
 
 **Handling:** keep the aging buckets and exception report in
-`06_opportunity_analysis.sql` as a method demonstration; age Open lines
-as of 2025-12-31 with an April 2026 sensitivity; list Open-status
-assignment under limitations. Vendor on-time % is unaffected.
+`06_opportunity_analysis.sql` as a method demonstration, labeled
+illustrative; list Open-status assignment under limitations.
