@@ -1,0 +1,272 @@
+/* =====================================================================
+   05_pricing_analysis.sql
+   Price variance vs. a product-level benchmark, reported as PPV
+   (Purchase Price Variance, in dollars).
+
+   Definitions (PROJECT_SPEC.md: median-based benchmark preferred; final
+   choice confirmed after Sections 1-3 below):
+     benchmark_price = median Unit_Price per product, across all valid
+                       Completed lines (both years, all vendors)
+     price_index     = Unit_Price / benchmark_price      (1.00 = at median)
+     PPV             = (Unit_Price - benchmark_price) * Quantity
+                       positive = paid above benchmark (unfavorable)
+
+   Scope: Completed lines with Quantity > 0 AND Unit_Price > 0
+   (same validity rule as 03/04). Read-only; builds temp tables only.
+
+   COLUMN-NAME ASSUMPTIONS - adjust if your tables differ:
+     fact_purchase_orders: PO_Line_ID, Vendor_ID, Product_ID, Order_Date,
+                           Quantity, Unit_Price, PO_Status
+     dim_product:          Product_ID, Product_Name, Product_Category
+     dim_vendor:           Vendor_ID, Vendor_Name
+
+   Caveat (from the spec): a price difference is an investigation
+   candidate, not confirmed overpayment. The benchmark is not contract-,
+   volume- or time-adjusted.
+   ===================================================================== */
+
+DECLARE @min_lines INT = 30;   -- products with fewer valid lines are too thin for a stable median
+
+/* ---------------------------------------------------------------------
+   0. Build the working set
+   --------------------------------------------------------------------- */
+DROP TABLE IF EXISTS #pb0;
+DROP TABLE IF EXISTS #pb;
+
+SELECT f.PO_Line_ID, f.Vendor_ID, f.Product_ID, f.Order_Date,
+       f.Quantity, f.Unit_Price,
+       f.Quantity * f.Unit_Price AS line_spend,
+       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY f.Unit_Price)
+           OVER (PARTITION BY f.Product_ID) AS benchmark_price,
+       COUNT(*) OVER (PARTITION BY f.Product_ID) AS product_lines,
+       p.Standard_Cost
+INTO #pb0
+FROM dbo.fact_purchase_orders f
+JOIN dbo.dim_product p ON f.Product_ID = p.Product_ID
+WHERE f.PO_Status = 'Completed'
+  AND f.Quantity > 0 AND f.Unit_Price > 0;
+
+SELECT *,
+       Unit_Price / benchmark_price                  AS price_index,
+       (Unit_Price - benchmark_price) * Quantity     AS ppv,
+       benchmark_price * Quantity                    AS benchmark_spend,
+       (Unit_Price - Standard_Cost) * Quantity       AS std_ppv   -- vs. dim_product.Standard_Cost
+INTO #pb
+FROM #pb0;
+
+/* ---------------------------------------------------------------------
+   1. Reconciliation and coverage
+      line_spend total should match the spend KPI from 03 ($499.65M)
+   --------------------------------------------------------------------- */
+SELECT COUNT(*)                         AS valid_completed_lines,
+       SUM(line_spend)                  AS total_spend,
+       COUNT(DISTINCT Product_ID)       AS products,
+       SUM(CASE WHEN product_lines < @min_lines THEN 1 ELSE 0 END) AS lines_in_thin_products
+FROM #pb;
+
+/* ---------------------------------------------------------------------
+   2. Lines per product (is a median stable enough?)
+   --------------------------------------------------------------------- */
+WITH p AS (SELECT Product_ID, COUNT(*) AS n FROM #pb GROUP BY Product_ID)
+SELECT MIN(n) AS min_lines, MAX(n) AS max_lines, AVG(n * 1.0) AS avg_lines,
+       SUM(CASE WHEN n < @min_lines THEN 1 ELSE 0 END) AS products_below_min
+FROM p;
+
+/* ---------------------------------------------------------------------
+   3a. Which products vary most in price? (top 15 by coefficient of variation)
+   --------------------------------------------------------------------- */
+SELECT TOP 15
+       d.Product_Name, d.Product_Category,
+       COUNT(*)                                   AS lines,
+       COUNT(DISTINCT b.Vendor_ID)                AS vendors,
+       MIN(b.benchmark_price)                     AS benchmark_price,
+       MIN(b.Unit_Price)                          AS min_price,
+       MAX(b.Unit_Price)                          AS max_price,
+       CAST(MAX(b.Unit_Price) / MIN(b.benchmark_price) AS DECIMAL(8,2)) AS max_to_median,
+       CAST(STDEV(b.Unit_Price) / AVG(b.Unit_Price) AS DECIMAL(8,3))    AS cv
+FROM #pb b
+JOIN dbo.dim_product d ON b.Product_ID = d.Product_ID
+WHERE b.product_lines >= @min_lines
+GROUP BY b.Product_ID, d.Product_Name, d.Product_Category
+ORDER BY cv DESC;
+
+/* 3b. Shape of the price index (look for outliers before trusting PPV totals) */
+SELECT CASE WHEN price_index < 0.50 THEN '1. below 0.50'
+            WHEN price_index < 0.80 THEN '2. 0.50-0.80'
+            WHEN price_index < 0.95 THEN '3. 0.80-0.95'
+            WHEN price_index <= 1.05 THEN '4. 0.95-1.05 (near median)'
+            WHEN price_index <= 1.20 THEN '5. 1.05-1.20'
+            WHEN price_index <= 2.00 THEN '6. 1.20-2.00'
+            ELSE '7. above 2.00' END AS price_index_band,
+       COUNT(*)        AS lines,
+       SUM(line_spend) AS spend
+FROM #pb
+WHERE product_lines >= @min_lines
+GROUP BY CASE WHEN price_index < 0.50 THEN '1. below 0.50'
+              WHEN price_index < 0.80 THEN '2. 0.50-0.80'
+              WHEN price_index < 0.95 THEN '3. 0.80-0.95'
+              WHEN price_index <= 1.05 THEN '4. 0.95-1.05 (near median)'
+              WHEN price_index <= 1.20 THEN '5. 1.05-1.20'
+              WHEN price_index <= 2.00 THEN '6. 1.20-2.00'
+              ELSE '7. above 2.00' END
+ORDER BY price_index_band;
+
+/* ---------------------------------------------------------------------
+   3c. Median benchmark vs. dim_product.Standard_Cost
+       Which benchmark to use? Overall, spend-weighted: if both indexes are
+       close to 1.00 the two benchmarks agree. Then the products where they
+       disagree most (look for unit-of-measure mismatches, e.g. ratios near
+       10x or 12x, and for a Standard_Cost that is 0 or NULL).
+   --------------------------------------------------------------------- */
+SELECT CAST(SUM(line_spend) / SUM(benchmark_spend) AS DECIMAL(8,4))              AS spend_to_median_index,
+       CAST(SUM(line_spend) / SUM(Standard_Cost * Quantity) AS DECIMAL(8,4))     AS spend_to_standard_index,
+       SUM(CASE WHEN Standard_Cost IS NULL OR Standard_Cost <= 0 THEN 1 ELSE 0 END) AS lines_without_usable_standard
+FROM #pb
+WHERE product_lines >= @min_lines;
+
+SELECT TOP 15
+       d.Product_Name, d.Unit_of_Measure, d.Standard_Cost,
+       MIN(b.benchmark_price) AS median_price,
+       CAST(MIN(b.benchmark_price) / NULLIF(d.Standard_Cost, 0) AS DECIMAL(8,3)) AS median_to_standard
+FROM #pb b
+JOIN dbo.dim_product d ON b.Product_ID = d.Product_ID
+WHERE b.product_lines >= @min_lines
+GROUP BY b.Product_ID, d.Product_Name, d.Unit_of_Measure, d.Standard_Cost
+ORDER BY ABS(MIN(b.benchmark_price) / NULLIF(d.Standard_Cost, 0) - 1) DESC;
+
+/* ---------------------------------------------------------------------
+   4. Overall PPV
+   --------------------------------------------------------------------- */
+SELECT SUM(ppv)                                         AS net_ppv,
+       SUM(CASE WHEN ppv > 0 THEN ppv ELSE 0 END)       AS unfavorable_ppv,
+       SUM(CASE WHEN ppv < 0 THEN ppv ELSE 0 END)       AS favorable_ppv,
+       SUM(line_spend)                                  AS spend,
+       CAST(100.0 * SUM(CASE WHEN ppv > 0 THEN ppv ELSE 0 END) / SUM(line_spend)
+            AS DECIMAL(6,2))                            AS unfavorable_ppv_pct_of_spend
+FROM #pb
+WHERE product_lines >= @min_lines;
+
+/* 4b. Same totals against Standard_Cost (classic PPV), for comparison */
+SELECT SUM(std_ppv)                                          AS net_std_ppv,
+       SUM(CASE WHEN std_ppv > 0 THEN std_ppv ELSE 0 END)    AS unfavorable_std_ppv,
+       SUM(CASE WHEN std_ppv < 0 THEN std_ppv ELSE 0 END)    AS favorable_std_ppv,
+       CAST(100.0 * SUM(CASE WHEN std_ppv > 0 THEN std_ppv ELSE 0 END) / SUM(line_spend)
+            AS DECIMAL(6,2))                                 AS unfavorable_std_ppv_pct_of_spend
+FROM #pb
+WHERE product_lines >= @min_lines
+  AND Standard_Cost > 0;
+
+/* ---------------------------------------------------------------------
+   5. PPV by vendor (price_index > 1 = vendor priced above benchmark,
+      spend-weighted)
+   --------------------------------------------------------------------- */
+SELECT v.Vendor_Name,
+       COUNT(*)         AS lines,
+       SUM(b.line_spend) AS spend,
+       CAST(SUM(b.line_spend) / SUM(b.benchmark_spend) AS DECIMAL(8,4)) AS price_index,
+       SUM(b.ppv)       AS net_ppv,
+       SUM(CASE WHEN b.ppv > 0 THEN b.ppv ELSE 0 END) AS unfavorable_ppv
+FROM #pb b
+JOIN dbo.dim_vendor v ON b.Vendor_ID = v.Vendor_ID
+WHERE b.product_lines >= @min_lines
+GROUP BY v.Vendor_ID, v.Vendor_Name
+ORDER BY price_index DESC;
+
+/* ---------------------------------------------------------------------
+   6. PPV by category
+   --------------------------------------------------------------------- */
+SELECT d.Product_Category,
+       COUNT(*)          AS lines,
+       SUM(b.line_spend) AS spend,
+       CAST(SUM(b.line_spend) / SUM(b.benchmark_spend) AS DECIMAL(8,4)) AS price_index,
+       SUM(b.ppv)        AS net_ppv,
+       SUM(CASE WHEN b.ppv > 0 THEN b.ppv ELSE 0 END) AS unfavorable_ppv
+FROM #pb b
+JOIN dbo.dim_product d ON b.Product_ID = d.Product_ID
+WHERE b.product_lines >= @min_lines
+GROUP BY d.Product_Category
+ORDER BY unfavorable_ppv DESC;
+
+/* ---------------------------------------------------------------------
+   7. Business question 5: is price variation linked to vendor or volume?
+   --------------------------------------------------------------------- */
+
+/* 7a. Vendor effect: within products bought from 2+ vendors (10+ lines each),
+       how often is each vendor above / below the product benchmark?
+       A vendor that is above 1.05 on most of its products is consistently
+       expensive; a spread across products points to something else. */
+WITH pv AS (
+    SELECT Product_ID, Vendor_ID,
+           COUNT(*) AS lines,
+           SUM(line_spend) AS spend,
+           SUM(benchmark_spend) AS bench_spend,
+           SUM(ppv) AS ppv
+    FROM #pb
+    WHERE product_lines >= @min_lines
+    GROUP BY Product_ID, Vendor_ID
+    HAVING COUNT(*) >= 10
+),
+multi AS (
+    SELECT Product_ID FROM pv GROUP BY Product_ID HAVING COUNT(*) >= 2
+)
+SELECT v.Vendor_Name,
+       COUNT(*) AS products_compared,
+       SUM(CASE WHEN pv.spend / pv.bench_spend > 1.05 THEN 1 ELSE 0 END) AS products_above_105,
+       SUM(CASE WHEN pv.spend / pv.bench_spend < 0.95 THEN 1 ELSE 0 END) AS products_below_095,
+       CAST(100.0 * SUM(CASE WHEN pv.spend / pv.bench_spend > 1.05 THEN 1 ELSE 0 END)
+            / COUNT(*) AS DECIMAL(5,1)) AS pct_products_above_105
+FROM pv
+JOIN multi m ON pv.Product_ID = m.Product_ID
+JOIN dbo.dim_vendor v ON pv.Vendor_ID = v.Vendor_ID
+GROUP BY v.Vendor_ID, v.Vendor_Name
+ORDER BY pct_products_above_105 DESC;
+
+/* 7b. Volume effect: within each product, split lines into thirds by quantity.
+       If larger orders get lower prices, tier 3 price_index will be below tier 1. */
+WITH t AS (
+    SELECT *, NTILE(3) OVER (PARTITION BY Product_ID ORDER BY Quantity) AS qty_tier
+    FROM #pb
+    WHERE product_lines >= @min_lines
+)
+SELECT qty_tier,
+       COUNT(*) AS lines,
+       AVG(Quantity * 1.0) AS avg_quantity,
+       CAST(SUM(line_spend) / SUM(benchmark_spend) AS DECIMAL(8,4)) AS price_index
+FROM t
+GROUP BY qty_tier
+ORDER BY qty_tier;
+
+/* 7c. Time effect: price drift between years would distort a two-year median */
+SELECT YEAR(Order_Date) AS order_year,
+       COUNT(*) AS lines,
+       CAST(SUM(line_spend) / SUM(benchmark_spend) AS DECIMAL(8,4)) AS price_index
+FROM #pb
+WHERE product_lines >= @min_lines AND Order_Date IS NOT NULL
+GROUP BY YEAR(Order_Date)
+ORDER BY order_year;
+
+/* ---------------------------------------------------------------------
+   8. Investigation candidates: vendor-product pairs priced above benchmark
+      (feeds 06_opportunity_analysis.sql)
+   --------------------------------------------------------------------- */
+WITH pv AS (
+    SELECT Product_ID, Vendor_ID,
+           COUNT(*) AS lines,
+           SUM(line_spend) AS spend,
+           SUM(benchmark_spend) AS bench_spend,
+           SUM(ppv) AS net_ppv
+    FROM #pb
+    WHERE product_lines >= @min_lines
+    GROUP BY Product_ID, Vendor_ID
+    HAVING COUNT(*) >= 10
+)
+SELECT TOP 20
+       v.Vendor_Name, d.Product_Name, d.Product_Category,
+       pv.lines, pv.spend,
+       CAST(pv.spend / pv.bench_spend AS DECIMAL(8,4)) AS price_index,
+       pv.net_ppv
+FROM pv
+JOIN dbo.dim_vendor  v ON pv.Vendor_ID  = v.Vendor_ID
+JOIN dbo.dim_product d ON pv.Product_ID = d.Product_ID
+WHERE pv.spend / pv.bench_spend > 1.05
+ORDER BY pv.net_ppv DESC;
