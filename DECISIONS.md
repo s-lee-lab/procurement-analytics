@@ -358,3 +358,33 @@ slipped; treat them with caution.
 
 **Status:** `04_vendor_performance.sql` complete except Section 12's
 2026-04-19 results. Next: `05_pricing_analysis.sql`.
+
+---
+
+## 2026-11-02 — Scope check against real job postings: extensions to planned steps
+
+**Decision:** Compare the project plan against current postings for roles this project is meant to support (procurement analyst, supply chain analyst, BI/Power BI analyst), and extend planned steps where postings repeatedly ask for something the plan didn't cover. Optimize the existing project; don't start over or add unrelated work.
+
+**What was reviewed:** roughly 15 individual postings plus several aggregated listing pages (Microsoft vendor spend, Broadridge procurement Power BI, Biomerics, Prime Data Centers, Howmet, Sensient, Book of the Month, SANAD/Nabors, and several BI analyst listings). It is a qualitative sample, not a statistical one. Some pages were templates or aggregators and were weighted lower. Many postings ask for 3+ years of experience; the project targets the junior-to-mid postings (about 1-3 years).
+
+**Already covered by the plan:** SQL, Power BI dashboards, spend analysis, supplier performance (on-time delivery, concentration, single-source risk), KPI definitions, data-quality work, version control.
+
+**Gaps found and where they now live:**
+
+| What postings ask for | Added to |
+|---|---|
+| Savings opportunity sizing, business cases, savings trackers | `06_opportunity_analysis.sql` (low/base/high ranges with stated assumptions); Excel savings tracker |
+| Purchase price variance (PPV) | `05_pricing_analysis.sql` reports PPV in dollars |
+| Supplier scorecards | `06_opportunity_analysis.sql` weighted scorecard, weights documented |
+| Past-due / delayed-line reporting | `06_opportunity_analysis.sql` Open-lines exception report |
+| Advanced Excel / Power Query | `excel/savings_opportunity_model.xlsx` (makes the README stack line true) |
+| DAX, semantic models, row-level security, Power BI Service | Power BI build: measures table, time intelligence, RLS, publish to Service |
+| Requirements gathering and UAT | `documentation/uat_plan.md`: traceability table and reconciliation test log |
+| Forecasting (supply-chain roles; some procurement roles) | `07_spend_forecast.sql`: baseline forecast with holdout backtest (MAPE, bias) |
+| Communicating findings to stakeholders | One-page executive brief; headline findings and screenshot at top of README |
+
+**Deliberately not added:** inventory/MRP analysis, contract compliance and maverick spend, OTIF (the data has no received-quantity field, so the project reports on-time delivery and says so), ML models, and cloud data platforms. The dataset can't support these without regenerating it, which would undo validated work. They go in the limitations section instead.
+
+**Caveats:** with only 24 monthly points, the forecast demonstrates method and backtesting discipline, not predictive power. The savings ranges come from synthetic data, so they illustrate the approach rather than real opportunity.
+
+**Status:** TASKS.md updated with the new items under NEXT. No changes to existing scripts.
