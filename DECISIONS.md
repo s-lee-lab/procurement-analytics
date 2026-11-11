@@ -388,3 +388,29 @@ slipped; treat them with caution.
 **Caveats:** with only 24 monthly points, the forecast demonstrates method and backtesting discipline, not predictive power. The savings ranges come from synthetic data, so they illustrate the approach rather than real opportunity.
 
 **Status:** TASKS.md updated with the new items under NEXT. No changes to existing scripts.
+
+---
+
+## 2026-11-10 — Open-order aging: Open status is a generator artifact, not a backlog finding
+
+**Decision:** Treat overdue Open lines as an illustrative past-due report, not a business finding, and use 2025-12-31 as the reference date for Open-order aging.
+
+**What we found:** Aged against an April 2026 snapshot, 1,216 Open lines
+($32.86M) are 30+ days past Expected_Delivery_Date; 729 lines ($20.4M)
+are 180+ days overdue.
+
+**Why it isn't a finding:** in `generate_data.py`, PO_Status is drawn by
+order recency only: 60% Open in the last 20 days of the window, 20% for
+the next 25 days, 4% for everything older. Vendor and expected delivery
+date play no role. The large 91–180 bucket is the recent-order Open rate
+measured against a later snapshot; the 180+ bucket is the flat 4% on old
+orders, which nothing ever closes.
+
+**Snapshot correction:** status reflects 2025-12-31, but Completed lines
+carry delivery dates to 2026-04-19. This is a generator inconsistency,
+not a real later snapshot (revises the 2026-11-02 wording).
+
+**Handling:** keep the aging buckets and exception report in
+`06_opportunity_analysis.sql` as a method demonstration; age Open lines
+as of 2025-12-31 with an April 2026 sensitivity; list Open-status
+assignment under limitations. Vendor on-time % is unaffected.
