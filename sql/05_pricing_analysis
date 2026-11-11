@@ -270,3 +270,28 @@ JOIN dbo.dim_vendor  v ON pv.Vendor_ID  = v.Vendor_ID
 JOIN dbo.dim_product d ON pv.Product_ID = d.Product_ID
 WHERE pv.spend / pv.bench_spend > 1.05
 ORDER BY pv.net_ppv DESC;
+
+/* ---------------------------------------------------------------------
+   9. Sensitivity: year-adjusted benchmark
+      Section 7c shows 2025 prices run ~3% above 2024, so a two-year median
+      makes vendors with more 2025 orders look pricier. Re-benchmark each
+      line against the median for its own product AND order year, and compare
+      vendor price indexes under both.
+   --------------------------------------------------------------------- */
+WITH yb AS (
+    SELECT *,
+           PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY Unit_Price)
+               OVER (PARTITION BY Product_ID, YEAR(Order_Date)) AS bench_yr
+    FROM #pb
+    WHERE Order_Date IS NOT NULL AND product_lines >= @min_lines
+)
+SELECT v.Vendor_Name,
+       COUNT(*)         AS lines,
+       SUM(yb.line_spend) AS spend,
+       CAST(SUM(yb.line_spend) / SUM(yb.benchmark_spend)    AS DECIMAL(8,4)) AS price_index_2yr_median,
+       CAST(SUM(yb.line_spend) / SUM(yb.bench_yr * yb.Quantity) AS DECIMAL(8,4)) AS price_index_year_median,
+       SUM((yb.Unit_Price - yb.bench_yr) * yb.Quantity) AS net_ppv_year_median
+FROM yb
+JOIN dbo.dim_vendor v ON yb.Vendor_ID = v.Vendor_ID
+GROUP BY v.Vendor_ID, v.Vendor_Name
+ORDER BY price_index_year_median DESC;
