@@ -451,3 +451,24 @@ composite. All figures are two-year totals on synthetic data.
 **Caveats:** realization rates are assumptions; the median is a midpoint on
 2-vendor products; delivery risk is not valued in dollars (no delay-cost
 data); overdue Open lines remain illustrative (see 2026-11-10).
+
+---
+
+## 2026-11-16 — Spend forecast: backtest at two origins
+
+**Decision:** Forecast monthly ordered spend (Completed + Open) for
+2026-01 to 2026-06 with the 6-month average (ma6), chosen on pooled
+backtest WAPE across two origins.
+
+**What we found:** the first backtest (train through 2025-06, test
+Jul-Dec 2025) favored seasonal_naive (WAPE 7.1% vs 9.7% for flat methods).
+Seasonality is only repeatable in Jul-Dec (2024 vs 2025 monthly profile
+correlation: 0.67 Jul-Dec, 0.06 Jan-Jun), and the forecast horizon is
+Jan-Jun. A second origin (train through 2024-12, test Jan-Jun 2025) ranked
+seasonal_naive worst (WAPE 13.1%) and ma6 best (5.7%). Pooled over 12
+holdout months, ma6 had the lowest WAPE (about 7.7%).
+
+**Caveats:** 24 monthly points and 12 holdout points; choosing a method
+after seeing the holdout is mildly optimistic; four flat methods tie on
+MAE in the Jul-Dec test (3 actuals below ~$21M, 3 above ~$24M). The forecast
+demonstrates method, not predictive power.
