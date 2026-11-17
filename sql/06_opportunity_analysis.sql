@@ -320,3 +320,39 @@ FROM (VALUES
         (SELECT CAST(SUM(spend) AS DECIMAL(18,2)) FROM #vs
          WHERE price_band = 'Above benchmark' AND delivery_band = 'Weak (<70%)'))
 ) AS t(metric, value);
+
+/* ---------------------------------------------------------------------
+   7. Export tables for Excel / Power BI (save each grid as CSV)
+   --------------------------------------------------------------------- */
+
+/* 7a. Vendor scorecard: one row per vendor (41 rows) */
+SELECT v.Vendor_Name, v.Vendor_Category, v.Region,
+       CAST(vs.spend AS DECIMAL(18,2))                  AS spend,
+       CAST(100.0 * vs.spend_share AS DECIMAL(6,3))     AS spend_share_pct,
+       CAST(vs.price_index AS DECIMAL(8,4))             AS price_index,
+       CAST(vs.on_time_pct AS DECIMAL(5,1))             AS on_time_pct,
+       CAST(vs.avg_days_late AS DECIMAL(5,1))           AS avg_days_late,
+       vs.price_band, vs.delivery_band,
+       CAST(@w_ontime * vs.s_ontime + @w_late * vs.s_late
+            + @w_price * vs.s_price + @w_conc * vs.s_conc AS DECIMAL(5,1)) AS composite_score,
+       ISNULL(g.flagged_products, 0)                    AS flagged_products,
+       CAST(ISNULL(g.gap_ceiling, 0) AS DECIMAL(18,2))  AS gap_ceiling
+FROM #vs vs
+JOIN dbo.dim_vendor v ON vs.Vendor_ID = v.Vendor_ID
+LEFT JOIN (SELECT Vendor_ID, COUNT(*) AS flagged_products, SUM(gap) AS gap_ceiling
+           FROM #pair GROUP BY Vendor_ID) g ON vs.Vendor_ID = g.Vendor_ID
+ORDER BY composite_score DESC;
+
+/* 7b. Flagged vendor-product pairs: one row per pair (96 rows), the base
+       for the Excel savings tracker */
+SELECT v.Vendor_Name, d.Product_Name, d.Product_Category,
+       p.lines,
+       CAST(p.spend AS DECIMAL(18,2))                       AS spend,
+       CAST(p.spend / p.bench_spend AS DECIMAL(8,4))        AS price_index,
+       CAST(p.gap AS DECIMAL(18,2))                         AS gap_to_median,
+       CAST(100.0 * o.on_time_lines / o.delivery_lines AS DECIMAL(5,1)) AS vendor_on_time_pct
+FROM #pair p
+JOIN dbo.dim_vendor  v ON p.Vendor_ID  = v.Vendor_ID
+JOIN dbo.dim_product d ON p.Product_ID = d.Product_ID
+JOIN #ot o             ON p.Vendor_ID  = o.Vendor_ID
+ORDER BY p.gap DESC;
