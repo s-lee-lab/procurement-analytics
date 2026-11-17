@@ -1,0 +1,42 @@
+Vendor_Name	Vendor_Category	Region	spend	spend_share_pct	price_index	on_time_pct	avg_days_late	price_band	delivery_band	composite_score	flagged_products	gap_ceiling
+Brookfield Technologies	IT Equipment	Northeast US	2250817.81	0.450	0.9443	97.2	3.6	Below benchmark	Strong (85%+)	85.2	0	0.00
+Fairview Business Supply	Office Supplies	Southwest US	3315575.47	0.664	0.9513	95.0	1.8	At benchmark	Strong (85%+)	83.8	0	0.00
+Overland Supply Co.	Office Supplies	Southwest US	5978702.79	1.197	0.9168	84.4	6.4	Below benchmark	Mid (70-85%)	72.9	0	0.00
+Juniper Building Services	Facilities	Southeast US	4297745.29	0.860	0.9585	87.3	13.3	At benchmark	Strong (85%+)	68.2	0	0.00
+Ivory Peak Manufacturing Co.	Manufacturing	Northeast US	11851525.33	2.372	0.8310	89.5	30.4	Below benchmark	Strong (85%+)	65.4	0	0.00
+Pioneer Hardware Group	IT Equipment	Northeast US	7892424.65	1.580	0.9507	89.5	20.2	At benchmark	Strong (85%+)	65.0	0	0.00
+Silverline Manufacturing Co.	Manufacturing	West US	17688556.19	3.540	0.9220	79.7	8.2	Below benchmark	Mid (70-85%)	64.4	0	0.00
+Redwood Consulting Group	Professional Services	Midwest US	14293641.30	2.861	0.9611	86.2	15.8	At benchmark	Strong (85%+)	62.8	0	0.00
+Westbrook Components Inc.	Manufacturing	West US	15460921.61	3.094	0.9923	82.6	7.8	At benchmark	Mid (70-85%)	62.8	0	0.00
+Trailhead Software Group	Software	Northeast US	21935082.04	4.390	0.9243	77.8	6.3	Below benchmark	Mid (70-85%)	62.8	0	0.00
+Ashford Systems	IT Equipment	West US	5320890.77	1.065	1.0345	83.1	7.6	At benchmark	Mid (70-85%)	62.7	4	171954.15
+Keystone Manufacturing Co.	Manufacturing	Midwest US	44978383.00	9.002	1.1231	96.5	5.1	Above benchmark	Strong (85%+)	61.1	10	4822732.24
+Sterling Software Inc.	Software	West US	29733206.34	5.951	0.9538	86.0	15.9	At benchmark	Strong (85%+)	59.5	0	0.00
+Copperline Digital Solutions	Software	West US	19118014.62	3.826	0.8689	82.7	24.7	Below benchmark	Mid (70-85%)	58.9	0	0.00
+Northfield Trading Co.	Office Supplies	International	2509713.45	0.502	1.1765	88.5	7.6	Above benchmark	Strong (85%+)	58.3	7	375562.84
+Granite Freight Services	Logistics	Midwest US	2706277.59	0.542	1.0925	81.3	9.6	Above benchmark	Mid (70-85%)	56.3	5	181400.53
+Cascade Consulting Group	Professional Services	Northeast US	4500157.05	0.901	0.7548	59.0	14.6	Below benchmark	Weak (<70%)	56.0	0	0.00
+Northgate Transport Co.	Logistics	International	4161740.65	0.833	0.9516	74.3	15.9	At benchmark	Mid (70-85%)	55.1	0	0.00
+Meridian Logistics Inc.	Logistics	International	5986693.10	1.198	1.0048	79.8	17.1	At benchmark	Mid (70-85%)	55.0	0	0.00
+Oakridge Maintenance Group	Facilities	Southwest US	2249638.33	0.450	0.7981	52.8	4.5	Below benchmark	Weak (<70%)	54.9	0	0.00
+Union Hardware Group	IT Equipment	Southeast US	1817274.88	0.364	1.0907	81.0	12.2	Above benchmark	Mid (70-85%)	54.5	5	151085.09
+Beacon Advisory Partners	Professional Services	International	7334335.21	1.468	0.9429	75.1	18.3	Below benchmark	Mid (70-85%)	54.0	0	0.00
+Bright Path Consulting Group	Professional Services	Southeast US	19047805.25	3.812	1.0396	88.0	22.5	At benchmark	Strong (85%+)	53.2	6	833648.92
+Marbleton Hardware Group	IT Equipment	Northeast US	8515901.08	1.704	0.8826	65.4	14.7	Below benchmark	Weak (<70%)	51.8	0	0.00
+Palisade Supply Co.	Office Supplies	Northeast US	6170190.56	1.235	1.1188	85.8	18.4	Above benchmark	Strong (85%+)	51.5	9	653272.17
+Crestline Technologies	IT Equipment	International	5613713.09	1.124	0.9446	70.3	16.0	Below benchmark	Mid (70-85%)	51.5	0	0.00
+Summit Maintenance Group	Facilities	Southwest US	2204299.93	0.441	1.0268	73.0	13.6	At benchmark	Mid (70-85%)	50.7	2	34672.91
+Pioneer Transport Co.	Logistics	West US	2944158.02	0.589	0.9602	61.4	6.6	At benchmark	Weak (<70%)	49.7	0	0.00
+Vertex Facilities Services	Facilities	Northeast US	5882072.62	1.177	0.9995	63.9	8.5	At benchmark	Weak (<70%)	47.1	0	0.00
+Highpoint Software Group	Software	Southeast US	21940058.14	4.391	1.0481	80.7	20.1	At benchmark	Mid (70-85%)	47.0	3	828665.24
+Harborview Components Inc.	Manufacturing	West US	41574951.21	8.321	1.0128	74.4	10.2	At benchmark	Mid (70-85%)	46.2	4	526547.69
+Fieldstone Office Partners	Office Supplies	Southeast US	3818936.36	0.764	0.9751	59.6	14.4	At benchmark	Weak (<70%)	41.3	1	4690.77
+Kingsley Components Inc.	Manufacturing	Southeast US	19818851.24	3.967	0.8492	55.9	18.7	Below benchmark	Weak (<70%)	40.2	0	0.00
+Dunmore Facility Partners	Facilities	International	3614868.99	0.723	1.0411	56.2	5.1	At benchmark	Weak (<70%)	40.2	6	126753.46
+Lakeside Cloud Systems	Software	Northeast US	33088786.40	6.622	1.1142	68.1	4.1	Above benchmark	Weak (<70%)	39.6	7	3526328.17
+Elmwood Components Inc.	Manufacturing	Southwest US	26274309.11	5.259	0.9798	68.6	22.2	At benchmark	Weak (<70%)	38.5	2	155016.72
+Lighthouse Industrial Group	Manufacturing	Southeast US	25263785.60	5.056	1.0960	68.2	10.8	Above benchmark	Weak (<70%)	38.1	6	1784485.13
+Anchor Solutions	IT Equipment	West US	11099793.17	2.222	1.0764	60.6	10.7	Above benchmark	Weak (<70%)	36.0	7	685993.97
+Pinnacle Software Inc.	Software	International	13496250.34	2.701	1.1045	61.5	10.8	Above benchmark	Weak (<70%)	34.2	3	1193040.89
+Greenway Hardware Group	IT Equipment	Southeast US	7082072.48	1.417	1.0326	60.8	20.4	At benchmark	Weak (<70%)	33.4	3	218529.20
+Ironclad Professional Services	Professional Services	West US	6819450.48	1.365	1.1802	56.1	7.8	Above benchmark	Weak (<70%)	27.6	6	1041028.85

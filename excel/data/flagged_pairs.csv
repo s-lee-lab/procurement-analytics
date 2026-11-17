@@ -1,0 +1,97 @@
+Vendor_Name	Product_Name	Product_Category	lines	spend	price_index	gap_to_median	vendor_on_time_pct
+Lakeside Cloud Systems	Data Warehouse Add-on	Software	62	5474153.16	1.2144	966337.50	68.1
+Keystone Manufacturing Co.	Adhesive Bulk Pack	Manufacturing	58	7133047.98	1.1522	942500.46	96.5
+Pinnacle Software Inc.	BI Platform License	Software	61	5154989.69	1.1849	804534.49	61.5
+Keystone Manufacturing Co.	Circuit Board Assembly	Manufacturing	41	4182215.66	1.2358	797996.58	96.5
+Lakeside Cloud Systems	Reporting Suite License	Software	91	3869067.22	1.2497	773189.05	68.1
+Lakeside Cloud Systems	Cloud Storage Plan	Software	120	11003120.66	1.0621	643512.90	68.1
+Highpoint Software Group	Firewall Software License	Software	105	10141825.94	1.0549	528033.44	80.7
+Lighthouse Industrial Group	CNC Machine Part	Manufacturing	37	2591364.06	1.2512	520280.54	68.2
+Keystone Manufacturing Co.	Cleanroom Supplies	Manufacturing	29	3435712.90	1.1749	511512.52	96.5
+Lakeside Cloud Systems	Email Platform Plan	Software	84	2036691.18	1.3222	496334.53	68.1
+Keystone Manufacturing Co.	Safety Gloves Case	Manufacturing	39	4755496.21	1.1045	449758.48	96.5
+Anchor Solutions	ThinkLine T4	IT Equipment	61	2795812.43	1.1880	442529.33	60.6
+Keystone Manufacturing Co.	Connector Set	Manufacturing	55	6712059.90	1.0702	440219.32	96.5
+Keystone Manufacturing Co.	Capacitor Pack	Manufacturing	43	5202611.28	1.0900	429473.25	96.5
+Keystone Manufacturing Co.	Power Supply Unit	Manufacturing	22	2688579.54	1.1807	411432.36	96.5
+Lighthouse Industrial Group	Forklift Attachment	Manufacturing	28	2903485.96	1.1571	394272.21	68.2
+Lighthouse Industrial Group	Assembly Line Tooling	Manufacturing	70	3626682.66	1.1189	385324.42	68.2
+Keystone Manufacturing Co.	Protective Packaging	Manufacturing	35	3877361.26	1.0978	345289.63	96.5
+Pinnacle Software Inc.	Endpoint Protection	Software	36	2398035.59	1.1596	330014.50	61.5
+Keystone Manufacturing Co.	Industrial Robot Arm Component	Manufacturing	46	3066287.19	1.1170	321097.66	96.5
+Lakeside Cloud Systems	PM Tool Enterprise	Software	66	1714285.11	1.2232	312780.61	68.1
+Ironclad Professional Services	Compliance Training Program	Professional Services	136	2126511.18	1.1675	305061.49	56.1
+Palisade Supply Co.	Standing Desk	Office Supplies	64	1576968.18	1.1782	238485.18	85.8
+Lakeside Cloud Systems	Identity Management Suite	Software	42	995843.61	1.2914	224725.32	68.1
+Highpoint Software Group	Office Suite Standard	Software	73	2637626.12	1.0923	222910.56	80.7
+Harborview Components Inc.	Power Supply Unit	Manufacturing	28	3117371.82	1.0756	219184.50	74.4
+Lighthouse Industrial Group	Lubricant Drum	Manufacturing	62	2331358.02	1.0998	211599.37	68.2
+Ironclad Professional Services	Process Improvement Consulting	Professional Services	37	1042058.36	1.2426	203442.92	56.1
+Harborview Components Inc.	Cleanroom Supplies	Manufacturing	28	3037492.00	1.0664	189232.20	74.4
+Bright Path Consulting Group	Process Improvement Consulting	Professional Services	75	2029088.14	1.1023	188355.22	88.0
+Lighthouse Industrial Group	Connector Set	Manufacturing	19	2346950.97	1.0832	180315.13	68.2
+Northfield Trading Co.	Cubicle Panel Kit	Office Supplies	53	1033786.57	1.2075	177645.90	88.5
+Bright Path Consulting Group	Technical Skills Training	Professional Services	114	1846458.84	1.1049	175301.04	88.0
+Ironclad Professional Services	IT Helpdesk Support	Professional Services	78	1223683.49	1.1664	174533.37	56.1
+Keystone Manufacturing Co.	Forklift Attachment	Manufacturing	16	1558537.96	1.1252	173451.97	96.5
+Ironclad Professional Services	Leadership Training Program	Professional Services	76	1334062.72	1.1316	155196.34	56.1
+Palisade Supply Co.	Office Chair Ergonomic	Office Supplies	36	1100015.18	1.1571	149327.39	85.8
+Greenway Hardware Group	ProBook 15	IT Equipment	31	1792478.13	1.0902	148267.45	60.8
+Ashford Systems	EliteBook X1	IT Equipment	30	1558889.55	1.1047	147734.64	83.1
+Bright Path Consulting Group	Compliance Consulting	Professional Services	140	1672058.50	1.0936	143068.10	88.0
+Elmwood Components Inc.	Circuit Board Assembly	Manufacturing	28	2510798.37	1.0541	128762.47	68.6
+Palisade Supply Co.	Filing Cabinet	Office Supplies	47	1362485.40	1.1041	128504.05	85.8
+Bright Path Consulting Group	Software Support Contract	Professional Services	109	1361958.98	1.0991	122762.30	88.0
+Bright Path Consulting Group	On-site Technical Support	Professional Services	84	1215434.82	1.1093	119760.84	88.0
+Lakeside Cloud Systems	PM Tool Standard	Software	51	446053.21	1.3252	109448.26	68.1
+Ironclad Professional Services	Network Support Retainer	Professional Services	41	599944.43	1.2098	104055.20	56.1
+Anchor Solutions	AeroBook Air	IT Equipment	42	1160646.73	1.0966	102218.29	60.6
+Ironclad Professional Services	On-site Technical Support	Professional Services	33	493190.30	1.2503	98739.53	56.1
+Lighthouse Industrial Group	Assembly Press Unit	Manufacturing	28	1914608.33	1.0509	92693.45	68.2
+Harborview Components Inc.	Conveyor Belt System	Manufacturing	45	590999.14	1.1736	87403.24	74.4
+Northfield Trading Co.	Drum Unit Replacement	Office Supplies	58	521312.62	1.2013	87367.02	88.5
+Bright Path Consulting Group	Network Support Retainer	Professional Services	116	1576487.30	1.0566	84401.42	88.0
+Highpoint Software Group	Collaboration Suite License	Software	54	971966.24	1.0869	77721.24	80.7
+Granite Freight Services	Warehouse Storage - Climate Controlled	Logistics	53	703835.66	1.1047	66718.22	81.3
+Anchor Solutions	Switch 48-Port	IT Equipment	59	845694.60	1.0807	63168.10	60.6
+Pinnacle Software Inc.	Identity Management Suite	Software	34	718962.57	1.0886	58491.90	61.5
+Dunmore Facility Partners	Deep Cleaning Service	Facilities	36	1159858.23	1.0522	57504.53	56.2
+Palisade Supply Co.	Conference Table	Office Supplies	35	1007997.47	1.0585	55672.65	85.8
+Union Hardware Group	Network Cable Bundle Cat6	IT Equipment	23	683462.87	1.0793	50209.97	81.0
+Anchor Solutions	ClearScreen 32 Curved	IT Equipment	29	276711.61	1.2087	47782.81	60.6
+Granite Freight Services	Ground Shipping Service	Logistics	42	383350.34	1.1383	46571.78	81.3
+Northfield Trading Co.	Toner Cartridge Black	Office Supplies	29	282555.16	1.1909	45297.57	88.5
+Northfield Trading Co.	Conference Table	Office Supplies	17	464481.49	1.1048	44046.08	88.5
+Granite Freight Services	Bulk Shipping Service	Logistics	41	337455.72	1.1196	36049.35	81.3
+Greenway Hardware Group	Switch 24-Port	IT Equipment	48	418019.39	1.0942	35985.59	60.8
+Greenway Hardware Group	UltraView 27	IT Equipment	37	486248.10	1.0758	34276.16	60.8
+Harborview Components Inc.	Fastener Kit	Manufacturing	18	259534.87	1.1343	30727.75	74.4
+Dunmore Facility Partners	Lighting Retrofit Service	Facilities	45	293887.35	1.1136	29991.09	56.2
+Union Hardware Group	WiFi Access Point AX	IT Equipment	14	410776.59	1.0747	28542.27	81.0
+Union Hardware Group	DockLink Dual HDMI	IT Equipment	22	172535.70	1.1943	28070.92	81.0
+Summit Maintenance Group	Window Cleaning Service	Facilities	20	260280.27	1.1184	27559.11	73.0
+Elmwood Components Inc.	Fastener Kit	Manufacturing	39	515793.05	1.0536	26254.25	68.6
+Union Hardware Group	USB Headset	IT Equipment	56	263902.91	1.1087	25875.43	81.0
+Palisade Supply Co.	Ink Cartridge Set	Office Supplies	70	384915.41	1.0594	21586.29	85.8
+Palisade Supply Co.	Toner Cartridge Color Set	Office Supplies	34	166236.66	1.1391	20294.52	85.8
+Palisade Supply Co.	Copy Paper Legal	Office Supplies	54	136101.25	1.1722	19989.10	85.8
+Union Hardware Group	DockPro USB-C	IT Equipment	36	286596.81	1.0686	18386.49	81.0
+Granite Freight Services	Domestic Freight Service	Logistics	28	141720.28	1.1331	16643.96	81.3
+Granite Freight Services	Air Shipping Service	Logistics	25	127414.30	1.1377	15417.22	81.3
+Dunmore Facility Partners	Cleaning Supplies Bundle	Facilities	21	136608.59	1.1031	12766.97	56.2
+Dunmore Facility Partners	Wiring Inspection Service	Facilities	30	222441.21	1.0564	11874.42	56.2
+Northfield Trading Co.	Toner Cartridge Color Set	Office Supplies	17	78125.30	1.1707	11392.02	88.5
+Dunmore Facility Partners	HVAC Emergency Repair	Facilities	43	204817.60	1.0579	11201.22	56.2
+Anchor Solutions	Mechanical Keyboard	IT Equipment	50	177091.67	1.0622	10377.24	60.6
+Anchor Solutions	UltraView 24	IT Equipment	58	213523.24	1.0503	10233.33	60.6
+Palisade Supply Co.	Shipping Label Roll	Office Supplies	67	183185.10	1.0574	9951.97	85.8
+Anchor Solutions	DockMax Universal	IT Equipment	33	122481.74	1.0859	9684.87	60.6
+Palisade Supply Co.	Barcode Label Set	Office Supplies	29	82435.02	1.1296	9461.02	85.8
+Ashford Systems	VisionPro 27	IT Equipment	27	82988.72	1.1194	8852.84	83.1
+Ashford Systems	DockLink Dual HDMI	IT Equipment	26	162660.63	1.0554	8540.58	83.1
+Northfield Trading Co.	Barcode Label Set	Office Supplies	18	57193.07	1.1686	8253.41	88.5
+Summit Maintenance Group	Cleaning Supplies Bundle	Facilities	17	118178.11	1.0641	7113.80	73.0
+Ashford Systems	Webcam HD	IT Equipment	33	121907.49	1.0593	6826.09	83.1
+Fieldstone Office Partners	Copy Paper Letter	Office Supplies	69	78098.37	1.0639	4690.77	59.6
+Dunmore Facility Partners	Electrical Panel Repair	Facilities	29	44075.55	1.0840	3415.23	56.2
+Northfield Trading Co.	Cardstock Paper	Office Supplies	23	24870.84	1.0670	1560.84	88.5
