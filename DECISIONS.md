@@ -425,3 +425,29 @@ behavior. Vendor on-time % is unaffected (Completed lines only).
 **Handling:** keep the aging buckets and exception report in
 `06_opportunity_analysis.sql` as a method demonstration, labeled
 illustrative; list Open-status assignment under limitations.
+
+---
+
+## 2026-11-16 — Opportunity analysis: price-leakage sizing and supplier scorecard
+
+**Decision:** Size price leakage as the dollars paid above the product-level
+median on vendor-product pairs (10+ lines, index over 1.05), report it as
+a ceiling plus low/base/high cases, and score vendors on a weighted
+composite. All figures are two-year totals on synthetic data.
+
+**Results (`06_opportunity_analysis.sql`):**
+- 96 flagged pairs (19 vendors, 81 products); gap ceiling $17.32M (3.47% of
+  spend). Assuming 25/50/75% recovery: $4.33M / $8.66M / $12.99M. Excluding
+  vendors at 85%+ on-time, the base case is $5.32M. Manufacturing and
+  Software hold 74% of the ceiling.
+- Five vendors are both above benchmark and under 70% on-time (Lakeside,
+  Lighthouse, Pinnacle, Anchor, Ironclad): $89.8M of spend (18%) and about
+  $8.2M of the ceiling.
+- Scorecard weights (judgment): on-time 40%, days late 20%, price 30%,
+  concentration 10%; metrics min-max scaled across vendors.
+- Tail: 22 vendors hold 19.3% of spend (avg $4.4M each); not fragmented
+  enough to support a consolidation claim.
+
+**Caveats:** realization rates are assumptions; the median is a midpoint on
+2-vendor products; delivery risk is not valued in dollars (no delay-cost
+data); overdue Open lines remain illustrative (see 2026-11-10).
