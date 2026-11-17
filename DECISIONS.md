@@ -465,8 +465,10 @@ Jul-Dec 2025) favored seasonal_naive (WAPE 7.1% vs 9.7% for flat methods).
 Seasonality is only repeatable in Jul-Dec (2024 vs 2025 monthly profile
 correlation: 0.67 Jul-Dec, 0.06 Jan-Jun), and the forecast horizon is
 Jan-Jun. A second origin (train through 2024-12, test Jan-Jun 2025) ranked
-seasonal_naive worst (WAPE 13.1%) and ma6 best (5.7%). Pooled over 12
-holdout months, ma6 had the lowest WAPE (about 7.7%).
+seasonal_naive worst (WAPE 13.1%) and ma6 best (5.7%). Pooled over 12 holdout months, ma6 had the lowest WAPE (7.69%, bias +0.25%),
+just ahead of mean_all (7.93%). Forecast for Jan-Jun 2026: $22.40M/month
+(about $134.4M total), rough band $20.66M-$24.14M (pooled MAE; 7 of 12
+backtest actuals fell inside it). The method assumes no trend.
 
 **Caveats:** 24 monthly points and 12 holdout points; choosing a method
 after seeing the holdout is mildly optimistic; four flat methods tie on
