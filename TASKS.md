@@ -2,80 +2,276 @@
 
 ## COMPLETED
 
-- Business problem, scope, stakeholders, business questions
-- Data architecture (5-table star schema)
-- KPI definitions
-- Data-generation rules & data-quality strategy
+### Project Foundation & Data Generation
+- Business problem, scope, stakeholders, and business questions
+- Data architecture: five-table star schema
+- KPI definitions and calculation grain
+- Data-generation rules and data-quality strategy
 - Project workflow ("AI Operating System")
 - Build `python/generate_data.py`
 - Generate raw dataset
-- Inspect raw dataset (row counts, duplicates, nulls, invalid values, date ranges, distributions, relationship integrity, business realism)
+- Inspect raw data: row counts, duplicates, nulls, invalid values, date ranges, distributions, relationship integrity, and business realism
 - Validate data-quality injection rates against targets
-- Validate business realism (department volume, dept→category affinity, vendor concentration, delivery variance, price variance)
-- Find and fix 2 generator bugs (impossible delivery dates; unrealistic Manufacturing line totals) — see DECISIONS.md
-- Sign-off on inspection report, including the ~$250M/yr total spend assumption (flagged as revisitable if it looks off during analysis)
-- Lock Checkpoint 2 (data generation)
-- Clarify KPI grain: delivery KPIs at PO-line level, PO Count as COUNT(DISTINCT PO_ID) — see DECISIONS.md
-- Load CSVs into SQL Server as `stg_` staging tables (all nvarchar)
-- `sql/01_data_quality.sql` — audit of the staging tables (duplicates, missing values, invalid values, formatting, invalid dates, PO_Line_ID collisions). Read-only; nothing is changed here.
-- `sql/02_data_cleaning.sql` — builds all five cleaned `dbo.` tables (fact + 4 dimensions) from staging. Re-runnable. Row counts verified: 19,579 / 9 / 41 / 107 / 731.
-- Find and resolve PO_Line_ID collisions (9 cases) — see DECISIONS.md
-- Verify dimension tables clean, incl. zero orphan keys vs. the fact table
-- Remove CHANGELOG.md (redundant with DECISIONS.md and commit history)
-- GitHub profile: bio, profile README, portfolio landing page
-- `sql/03_spend_analysis.sql` — first JOINs and KPIs. Total completed spend $499.65M, 8,014 POs, 41 vendors; spend by year, month, department, category, subcategory; totals reconcile to the cent. Found the end-of-data artifact (Dec 2025 dip) — see DECISIONS.md
-- `sql/04_vendor_performance.sql` — vendor spend share and concentration (top-10 share 56.8%, 19 vendors = 80%, HHI 439, 8 single-source products), On-Time Delivery % (75.8% overall) and Average Days Late at PO-line grain; Section 12 ages Open lines as of 2025-12-31 and 2026-04-19. Found the calendar-coverage gap (deliveries run to 2026-04-19, `dim_date` ends 2025-12-31) — see DECISIONS.md
-- Open-order aging: Open status in the generator is assigned by order recency, not vendor or expected date, so the overdue report is illustrative, not a backlog finding (reasoning to be logged in DECISIONS.md, 2026-11-10)
-- `sql/05_pricing_analysis.sql` — Purchase Price Variance (PPV) against a product-level median benchmark (Standard_Cost used as a cross-check). Vendor price index runs 0.75–1.18; no volume-discount pattern (0.999 / 1.007 / 0.983); 2025 prices about 3% above 2024 without changing the vendor ranking (year-adjusted check)
-- `sql/06_opportunity_analysis.sql` — 96 flagged vendor-product pairs, $17.3M price-gap ceiling (3.47% of spend), low / base / high savings of $4.3M / $8.7M / $13.0M at assumed 25 / 50 / 75% recovery; on products with 3+ vendors the ceiling is $14.6M. Weighted vendor scorecard, price × on-time quadrants (5 vendors are above benchmark AND under 70% on-time: $89.8M, 18% of spend), tail spend, overdue-Open report, and export grids for Excel
-- `sql/07_spend_forecast.sql` — monthly ordered-spend forecast, two-origin backtest, six-month average (ma6) selected: about $22.4M/month for Jan–Jun 2026, typical miss about $1.7M
-- Job-posting review: gaps identified and folded into the plan (see DECISIONS.md, 2026-11-02)
-- `excel/excel_model_guide.md` written; CSV exports from `06` saved in `excel/data/`
-- README rewritten (findings first, first person, numbers verified against query results)
+- Validate business realism: department volume, department-to-category affinity, vendor concentration, delivery variance, and price variance
+- Find and fix two generator bugs:
+  - Impossible delivery dates
+  - Unrealistic Manufacturing line totals
+- Sign off on the inspection report, including the approximately $250M annual spend assumption
+- Lock Checkpoint 2: Data Generation
+
+### SQL Setup & Data Quality
+- Clarify KPI grain: delivery KPIs at PO-line level; PO Count uses `COUNT(DISTINCT PO_ID)`
+- Load CSVs into SQL Server as `stg_` staging tables, with all columns initially stored as `nvarchar`
+- `sql/01_data_quality.sql`: read-only audit of staging tables, covering duplicates, missing and invalid values, formatting, invalid dates, and `PO_Line_ID` collisions
+- `sql/02_data_cleaning.sql`: build all five cleaned `dbo.` tables from staging; script is re-runnable
+- Resolve nine `PO_Line_ID` collision cases
+- Verify dimension tables and confirm zero orphan keys against the fact table
+- Verify cleaned row counts: 19,579 fact rows, 9 departments, 41 vendors, 107 products, and 731 dates
+- Remove `CHANGELOG.md` because `DECISIONS.md` and Git commit history already capture project changes
+
+### Analysis
+- `sql/03_spend_analysis.sql`
+  - Completed spend: $499.65M
+  - Distinct POs: 8,014
+  - Active vendors: 41
+  - Spend by year, month, department, category, and subcategory
+  - Reconciliation of totals to the cent
+  - Identification of the December 2025 end-of-data effect
+
+- `sql/04_vendor_performance.sql`
+  - Vendor spend share and concentration
+  - Top 10 vendors: 56.8% of spend
+  - 19 vendors: approximately 80% of spend
+  - HHI: 439
+  - Eight single-source products
+  - Overall On-Time Delivery: 75.8%
+  - Average Days Late at PO-line grain
+  - Open-order aging at December 31, 2025, with April 19, 2026 as a sensitivity date
+  - Identification and correction of the delivery-date calendar coverage gap
+
+- `sql/05_pricing_analysis.sql`
+  - Purchase Price Variance against a product-level median benchmark
+  - `Standard_Cost` retained as a secondary cross-check
+  - Vendor price index range: 0.75–1.18
+  - Volume-discount analysis
+  - Year-adjusted price comparison
+
+- `sql/06_opportunity_analysis.sql`
+  - 96 flagged vendor-product pairs
+  - $17.3M theoretical price-gap ceiling, or 3.47% of spend
+  - Low / Base / High recovery scenarios: $4.3M / $8.7M / $13.0M
+  - Three-or-more-vendor product sensitivity: $14.6M ceiling
+  - Vendor scorecard analysis
+  - Price-versus-on-time quadrants
+  - Tail-spend analysis
+  - Open-order report
+  - Export grids for Excel
+
+- `sql/07_spend_forecast.sql`
+  - Monthly ordered-spend forecast
+  - Two-origin backtest
+  - Six-month moving average (`MA6`) selected using pooled backtest error
+  - January–June 2026 forecast: approximately $22.4M per month
+
+### Supporting Work
+- Review job postings and identify relevant skill gaps
+- Create `excel/excel_model_guide.md`
+- Save SQL analysis exports under `excel/data/`
+- Rewrite README with findings first, first-person explanations, and figures checked against query results
+- Update GitHub profile bio, profile README, and portfolio landing page
+
+---
 
 ## CURRENT
 
-- **Docs catch-up** (the analysis is ahead of the log):
-  - DECISIONS.md: add entries for the Open-order aging finding (2026-11-10), pricing and benchmark choice, opportunity sizing and scorecard (including the 2-vendor sensitivity), and the forecast backtest
-  - DECISIONS.md and `04_vendor_performance.sql`: correct "33.2%" to "34.9%" for spend held by the 15 vendors under 70% on-time (the vendor shares sum to 34.92%)
-  - PROJECT_SPEC.md: Price Variance benchmark = product-level median across both years and all vendors (confirmed after inspection); add the generator-artifact limitations (Open status, vendor price levels); record the reference date (below)
-  - DATA_DICTIONARY.md: add the `dim_date` coverage note
-- **Build `excel/savings_opportunity_model.xlsx`** from `excel/excel_model_guide.md`: Power Query load, scenario inputs, savings tracker, PivotTables, and a Checks sheet that reconciles to the SQL results within $1
+### 1. Documentation Reconciliation
+
+The analysis is ahead of some of the project documentation. Bring the documents into agreement before building the presentation layer.
+
+- [ ] **`DECISIONS.md`**
+  - Record the November 10 Open-order aging findings and their limitations
+  - Document the product-level median benchmark decision
+  - Document opportunity sizing, recovery assumptions, and the two-vendor sensitivity
+  - Document the vendor scorecard methodology and unresolved validation details
+  - Record the two-origin forecast backtest and why MA6 was selected
+  - Reconcile the under-70%-on-time vendor spend share to the verified SQL result
+
+- [ ] **`04_vendor_performance.sql` and README**
+  - Verify the 15 vendors below 70% on-time account for 34.92% of spend
+  - Use the same verified figure in the SQL comments, README, and decision log
+
+- [ ] **`PROJECT_SPEC.md`**
+  - Specify the primary price benchmark: product-level median across both years and all vendors
+  - Explain why `Standard_Cost` is a cross-check rather than the primary benchmark
+  - Document generator limitations, including recency-based Open status and generated vendor price levels
+  - Record the December 31, 2025 reference date for Open-order status
+  - Explain the April 19, 2026 delivery-date tail
+
+- [ ] **`DATA_DICTIONARY.md`**
+  - Document the `dim_date` coverage through December 31, 2025
+  - Explain that delivery dates extend through April 19, 2026
+  - Clarify the date relationship and how delivery-date analysis avoids dropping valid records
+
+- [ ] **Cross-document consistency check**
+  - Confirm that key figures match across README, PROJECT_SPEC, DATA_DICTIONARY, DECISIONS, and SQL
+  - Clearly distinguish observed results from assumptions and generated-data limitations
+
+### 2. Excel Savings Opportunity Model
+
+- [ ] Build `excel/savings_opportunity_model.xlsx` using `excel/excel_model_guide.md`
+  - Load SQL exports using Power Query
+  - Add editable Low / Base / High recovery assumptions
+  - Build a savings opportunity analysis by vendor and product
+  - Add a savings tracker that separates identified, approved, and realized savings
+  - Create PivotTables for vendor, category, and opportunity analysis
+  - Add a Checks sheet to reconcile Excel calculations against SQL results within $1
+  - Clearly label the $17.3M figure as a theoretical price-gap ceiling, not guaranteed savings
+
+**Completion criteria:** The workbook refreshes successfully, scenario assumptions are editable, and its key calculations reconcile to SQL.
+
+---
 
 ## NEXT
 
-- **Power BI semantic model:** star schema, a dedicated measures table, DAX with time intelligence, row-level security (e.g., by Department or Region), publish to Power BI Service. Date table must cover delivery dates (see Carry Forward)
-- **Dashboard** (3 pages):
-  - Executive Overview: spend and trend (ordered spend, last-month footnote), concentration, forecast line
-  - Vendor Performance: on-time by vendor, price × on-time quadrants, scorecard, survivorship caveat
-  - Cost & Procurement Opportunities: price gap by vendor and category, Low / Base / High savings scenarios, flagged pairs
-- **UAT & traceability** (`documentation/uat_plan.md`): table mapping each stakeholder question → KPI → visual → test; test log reconciling Power BI and Excel against the SQL totals ($499.65M, 8,014 POs, 41 vendors, 75.8% on-time, $17.3M ceiling); slicer/filter tests; RLS tests; known-limitation checks (Dec 2025 footnote)
-- **One-page executive brief** (`documentation/executive_brief.md`) built from the findings, plus a dashboard screenshot near the top of the README
-- Update README status, tree and "Next" list after Excel and Power BI exist
-- Final documentation polish: rewrite DECISIONS.md and PROJECT_SPEC.md in my own voice once each part is genuinely understood
-- Final portfolio audit (Checkpoint 7)
+### 3. Power BI Semantic Model
 
-## CARRY FORWARD
+- [ ] Build the star schema using the cleaned SQL tables or approved analysis exports
+- [ ] Create a dedicated measures table
+- [ ] Implement DAX measures for core KPIs and time intelligence
+- [ ] Configure date relationships without losing delivery records after December 31, 2025
+- [ ] Validate filter behavior across dimensions and measures
+- [ ] Implement row-level security only where the data model supports a meaningful Department- or Region-level access rule
+- [ ] Test RLS with representative users or roles
+- [ ] Publish to Power BI Service, subject to available account and licensing access
 
-- **Dashboard trend:** use ordered spend (Completed + Open) for trends, and footnote the last 1-2 months of any Completed-only visual (recent orders are still Open, so recent Completed spend looks low)
-- **Reference date:** Open status was assigned as of 2025-12-31 (generator), while delivery dates run to 2026-04-19. Age Open lines as of 2025-12-31, show April 2026 as a sensitivity, and record this in PROJECT_SPEC.md
-- **Open-order aging is illustrative:** overdue Open lines come from the generator's recency-based status odds, not vendor behavior. Label it that way wherever it appears, and list it under limitations
-- **Open question (low priority):** vendor Open rates on older orders vary more than chance would give (chi-square 77.4, 40 df; range 1.7%–7.5%, pooled 4.4%). Search the generator for a status override and compare with vendor on-time %
-- **Don't present gross unfavorable PPV as savings:** $22.05M (4.41% of spend) vs. the median is offset by $24.71M favorable; against Standard_Cost it is $36.32M (7.27%). Savings come only from the flagged pairs, as assumed recovery ranges
-- **Median is a midpoint on 2-vendor products:** 11 of the 96 flagged pairs ($2.74M, about 16% of the ceiling) are on 2-vendor products. Show the 3+ vendor figure ($14.6M ceiling; $3.6M / $7.3M / $10.9M) as the conservative case
-- **Price and on-time are uncorrelated** (r = 0.09). Score them separately and show the four quadrants. A vendor like Keystone (largest gap, 96.5% on-time) may be buying reliability: don't recommend repricing it blindly
-- **Scorecard weights (40 / 20 / 30 / 10) and recovery rates (25 / 50 / 75%) are judgment calls.** State them as assumptions on the dashboard and in the brief
-- **Forecast:** keep the line flat, show the ±$1.7M band as a rough range, and note it assumes no trend (2025 ran about 4.6% above 2024). Seasonality only repeats Jul–Dec, so use a seasonal method only if the horizon extends into H2
-- **Power BI date table:** `dim_date` ends 2025-12-31. Extend it past 2026-04-19 (or keep deriving delivery month from the date) so delivery relationships don't silently drop rows (158 lines were dropped by the SQL inner join before this was fixed)
-- **Survivorship caveat:** delivery KPIs only cover delivered lines, so late orders still Open count against no vendor. State this on the scorecard and the Vendor Performance page
-- **2026 delivery months:** very small samples with low on-time rates (likely late-2025 orders slipping). Footnote or exclude from vendor trend visuals
-- Limitations to carry into the brief: Software is 27.9% of spend (~$70M/yr), high for a ~1,000-person manufacturer, and the clean split in vendor price levels is unlikely in real data; both are generator settings
-- Before using dim_date[Week] for anything: confirm it isn't ISO weeks
+**Completion criteria:** The model produces consistent results under the intended filters, preserves the relevant date coverage, and passes the planned RLS tests.
+
+### 4. Power BI Dashboard
+
+Build three report pages.
+
+**Page 1 — Executive Overview**
+- Total ordered spend and monthly trend
+- Completed versus Open spend context
+- Vendor concentration
+- Spend forecast
+- Footnote explaining the most recent months of Completed-only spend
+
+**Page 2 — Vendor Performance**
+- On-Time Delivery by vendor
+- Price-versus-on-time quadrants
+- Vendor scorecard
+- Vendor spend concentration
+- Survivorship caveat: Open orders are not included in delivered-line performance metrics
+
+**Page 3 — Cost & Procurement Opportunities**
+- Price-gap opportunity by vendor and category
+- Low / Base / High recovery scenarios
+- Flagged vendor-product pairs
+- Sensitivity analysis for products with at least three vendors
+- Clear distinction between theoretical opportunity and assumed recoverable savings
+
+### 5. UAT & Traceability
+
+- [ ] Create `documentation/uat_plan.md`
+- [ ] Map each stakeholder question to its KPI, report visual, and validation test
+- [ ] Reconcile Power BI and Excel against SQL:
+  - Completed spend: $499.65M
+  - Distinct POs: 8,014
+  - Active vendors: 41
+  - On-Time Delivery: 75.8%
+  - Theoretical price-gap ceiling: $17.3M
+- [ ] Test slicers, filters, drill-through, and cross-highlighting
+- [ ] Test RLS, if implemented
+- [ ] Verify date behavior, including delivery records through April 19, 2026
+- [ ] Verify the December 2025 end-of-data caveat
+- [ ] Record test results, discrepancies, and resolutions
+
+**Completion criteria:** Every major KPI and visual has a documented validation result, and material discrepancies are resolved or explained.
+
+### 6. Executive Brief & Portfolio Presentation
+
+- [ ] Create `documentation/executive_brief.md`
+  - Business problem and analytical approach
+  - Most important findings
+  - Procurement opportunities and scenario assumptions
+  - Vendor performance insights
+  - Forecast and limitations
+  - Practical recommendations
+
+- [ ] Add a clear dashboard screenshot near the top of the README
+- [ ] Update README project status, repository tree, and next steps after Excel and Power BI are complete
+- [ ] Make the project easy to understand without requiring someone to read every SQL script
+
+### 7. Final Documentation & Portfolio Audit
+
+- [ ] Rewrite `DECISIONS.md` and `PROJECT_SPEC.md` in my own voice after I can explain the decisions and trade-offs
+- [ ] Review all documentation for consistency and unnecessary technical detail
+- [ ] Verify that every major finding can be traced to a SQL query, calculation, or explicit assumption
+- [ ] Remove outdated task statuses and references to unfinished work
+- [ ] Check repository organization, file names, instructions, and reproducibility
+- [ ] Review the project as a hiring manager: can someone quickly understand the business problem, what I did, what I found, and why it matters?
+- [ ] Lock Checkpoint 7: Final Portfolio Audit
+
+---
+
+## CARRY FORWARD — Important Analytical Guardrails
+
+These are constraints to preserve while building the Excel model, Power BI report, and executive brief.
+
+### Spend & Time Trends
+- Use ordered spend (Completed + Open) for monthly spend trends.
+- Footnote the last one or two months of Completed-only visuals because recent orders are more likely to remain Open.
+- Do not interpret the December 2025 Completed-spend dip as a sudden business decline.
+- Keep the forecast flat and describe the ±$1.7M as a rough historical error range, not a statistical confidence interval.
+- Explain that the forecast assumes no trend, even though 2025 ordered spend was approximately 4.6% above 2024.
+- Treat the forecast as exploratory: only 24 months of history and 12 holdout observations were available.
+
+### Open-Order Aging
+- Open status was assigned by the generator using order recency, not actual supplier behavior.
+- Use December 31, 2025 as the primary reference date.
+- Show April 19, 2026 as a sensitivity, not as a directly comparable operational snapshot.
+- Label Open-order aging as illustrative wherever it appears.
+- Do not present the overdue Open report as evidence of actual vendor backlog or performance.
+
+### Pricing & Savings
+- Do not present gross unfavorable PPV as achievable savings.
+- Unfavorable PPV against the median is $22.05M, offset by $24.71M favorable PPV.
+- Unfavorable PPV against `Standard_Cost` is $36.32M.
+- Base savings are an assumed recovery scenario, not a forecast or commitment.
+- Eleven of the 96 flagged pairs are on two-vendor products, representing approximately $2.74M of the theoretical ceiling.
+- Show the three-or-more-vendor sensitivity separately: $14.6M ceiling and approximately $3.6M / $7.3M / $10.9M at 25% / 50% / 75% recovery.
+- A vendor with a higher price index may also provide better delivery reliability. For example, Keystone has the largest price gap and 96.5% on-time delivery. Avoid recommending repricing without considering the full relationship.
+
+### Vendor Performance & Scorecard
+- Price and on-time performance are weakly correlated (r = 0.09); analyze them separately.
+- Show the four price-versus-on-time quadrants.
+- Delivery KPIs cover eligible Completed lines only. Open orders, including potentially late orders, are excluded. State this survivorship limitation.
+- The scorecard weights (40 / 20 / 30 / 10) are judgment-based assumptions, not objective industry standards.
+- Document the score direction, normalization method, and treatment of missing observations before presenting the score as a final ranking.
+- Treat 2026 delivery months cautiously because their samples are small.
+
+### Data Model & Generated-Data Limitations
+- `dim_date` currently ends December 31, 2025, while delivery dates extend through April 19, 2026.
+- Extend the date table or use a separate delivery-date approach. Do not silently lose valid delivery records.
+- Before using `dim_date[Week]`, confirm its definition; it represents seven-day blocks beginning January 1, not ISO weeks.
+- Software represents approximately 27.9% of spend, or roughly $70M annually. This is a generator setting and should not be treated as a real-world industry benchmark.
+- The clean separation in vendor price levels is also a generator characteristic.
+- Do not add inventory/MRP, contract compliance, maverick spend, OTIF, machine learning, or cloud-platform analysis without supporting data and an explicit scope change.
+
+---
 
 ## DECIDED / PARKED
 
-- `data/cleaned/`: skipped. For Excel, the CSV exports of the `06` results live in `excel/data/`. Decide at the Power BI step whether to connect to SQL Server directly or use CSVs.
-- ~$250M/yr spend assumption: accepted. Spend analysis supports it ($499.65M over 2 years); the Software share is noted above.
-- PPV benchmark: product-level median is primary; Standard_Cost is a cross-check (no unit-of-measure problems, no missing values; product medians sit up to 33% from Standard_Cost).
-- Forecast method: six-month average (ma6), chosen on pooled backtest error across two origins, because the Jul–Dec holdout alone flattered seasonal methods.
-- Not adding (no supporting data, and out of scope without regenerating): inventory/MRP analysis, contract compliance and maverick-spend analysis, on-time-in-full (no received-quantity field), ML models, cloud data platforms. Listed under limitations in the final writeup instead.
+- `data/cleaned/` is not currently needed. Excel analysis exports are stored under `excel/data/`. Decide whether Power BI should connect directly to SQL Server or use approved exports during model development.
+- Annual spend assumption of approximately $250M accepted, supported by $499.65M in Completed spend across the two-year analysis period.
+- Primary PPV benchmark: product-level observed median across both years and all vendors. `Standard_Cost` is a cross-check.
+- Forecast method: six-month moving average (`MA6`), selected using pooled backtest error across two origins.
+- Out of scope without additional data or a regenerated dataset:
+  - Inventory and MRP analysis
+  - Contract compliance
+  - Maverick-spend analysis
+  - On-time-in-full (no received-quantity field)
+  - Machine learning models
+  - Cloud data platforms
+

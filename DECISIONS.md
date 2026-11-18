@@ -1,476 +1,863 @@
-# DECISIONS LOG
+# DECISIONS LOG — Procurement Spend & Vendor Performance Analytics
 
-Records meaningful decisions made during the project and why.
+This log records meaningful analytical, technical, and methodological decisions made throughout the project.
 
----
-
-## 2026-09-07 — Checkpoint 1: Requirements & Architecture Locked
-
-All business scope, stakeholders, business questions, data architecture
-(5-table star schema), KPI definitions, data-generation philosophy, and
-the AI operating workflow were locked. See PROJECT_SPEC.md and
-DATA_DICTIONARY.md.
+The purpose is to preserve not only what changed, but why a particular approach was chosen, what was learned, and what should be considered when interpreting the results.
 
 ---
 
-## 2026-09-07 — Deliverable #1: Generator built, two bugs found and fixed during inspection
+## 2026-09-07 — Checkpoint 1: Requirements and Architecture Locked
 
-**Decision:** Build `python/generate_data.py` to produce the five raw
-CSVs, then actually inspect the output before trusting it — the rule
-here is we fix the generator, we don't patch bad data downstream.
+**Decision**
 
-**What we found on first inspection:**
+Finalize the initial business requirements and technical architecture before generating data or writing analytical SQL.
 
-1. **Delivery-date logic bug (fixed).** For products with very short
-   lead times (1–2 days), the on-time/early delivery offset
-   (`random.randint(-3, 0)`) could push `Actual_Delivery_Date` before
-   `Order_Date` — physically impossible, not a deliberate data-quality
-   issue. Affected 599 of ~19,300 rows before the fix. **Fix:** the
-   early-delivery offset is now bounded by the product's own lead time,
-   so a delivery can never be logged before the order was placed. After
-   the fix, only the 13 intentionally-injected bad-date rows (~0.07%)
-   show this pattern — matches the small controlled-issue target from
-   PROJECT_SPEC section 15.
+**Scope established**
 
-2. **Unrealistic line totals in Manufacturing "Components" (fixed).**
-   Unit cost and quantity were drawn independently per line. For
-   low-cost, high-volume parts (e.g. resistor packs) a high-end cost
-   roll ($500+) could combine with a high-end quantity roll (5,000
-   units), producing a single PO line worth over $2.5M. This pushed
-   total simulated 2-year company spend to an implausible $1.26B and
-   skewed 76% of all spend into Manufacturing alone. **Fix:** added a
-   `CATEGORY_MAX_LINE_VALUE` guardrail — if `unit_cost × quantity`
-   exceeds a category-realistic ceiling, quantity gets capped down
-   before pricing. Total completed spend after the fix: ~$503M over 2
-   years (~$252M/yr) — reasonable for a ~1,000-employee company doing
-   its own manufacturing/assembly, since procurement here covers
-   production materials and components, not just G&A spend. Still a
-   judgment call, not a fact — worth revisiting if it looks off once
-   we're deeper into analysis.
+- Fictional company: Northstar Electronics.
+- Primary stakeholder: Procurement Manager.
+- Supporting stakeholders: Finance Manager and Operations Manager.
+- Five-table star schema.
+- PO-line-level fact table grain.
+- Explicit spend, delivery, and vendor KPI definitions.
+- Synthetic data generation with controlled data-quality issues.
+- Excel / Power Query → SQL → Power BI workflow.
 
-**Why this matters:** both issues are generator defects, not business
-signal. Treating them as bugs to fix rather than something to explain
-away analytically later.
+**Why it matters**
 
-**Status:** Checkpoint 2 (data generated and validated) — see
-`documentation/methodology.md` for the full inspection report.
-**PASSED.** Reviewed and accepted, including the ~$250M/yr spend
-assumption (still flagged as revisitable if it looks off during
-analysis).
+Establishing the business questions and data grain upfront prevents the project from becoming a collection of disconnected technical exercises.
+
+The analytical work should answer recognizable procurement questions, and every metric should have a clear definition before implementation.
+
+**Status:** Complete. See `PROJECT_SPEC.md` and `DATA_DICTIONARY.md`.
 
 ---
 
-## 2026-09-18 — KPI grain clarification: delivery metrics defined at PO-line level
+## 2026-09-07 — Deliverable 1: Synthetic Data Generator Built and Two Bugs Fixed
 
-**Decision:** Clarify PROJECT_SPEC.md's KPI definitions to state
-explicitly that delivery metrics operate at the PO-line grain, matching
-the fact table — not left ambiguous between "purchase order" and "PO
-line."
+**Decision**
 
-**What we found:** External review flagged that phrasing like
-"Completed POs, delivered ≤ Expected_Delivery_Date" doesn't define what
-happens when one PO_ID has multiple lines with different delivery
-outcomes (e.g. PO-1801: Component A on time, Component B late,
-Component C on time). Since the fact table grain is one row per PO
-line, "PO delivered on time" wasn't actually a well-defined statement.
+Build `python/generate_data.py` to produce five raw CSV files, then inspect the generated data before using it for analysis.
 
-**Fix:** Updated PROJECT_SPEC.md to:
-- Add an explicit "Fact table grain" section stating the grain and why
-  it matters for delivery KPIs specifically.
-- Reword **On-Time Delivery %** and **Average Days Late** to say "PO
-  lines" instead of "POs," so it's clear these are line-grain.
-- Reword **PO Count** to show `COUNT(DISTINCT PO_ID)` explicitly and
-  note it's a separate, PO-level metric.
-- Updated the Inclusion Rules section to match.
+The guiding principle is to fix generator defects at the source rather than compensate for unrealistic data downstream.
 
-**Why this matters:** the fact table design was already correct — this
-was a wording gap, not a design flaw. But if the SQL/DAX ends up
-line-grain while the spec implies PO-grain, that's exactly the kind of
-inconsistency an interviewer would poke at. Fixing it now, before any
-analytical SQL gets written, means every downstream query starts from
-an unambiguous definition instead of needing a retroactive fix later.
+**Finding 1: Delivery-date logic bug**
 
-**Status:** Applied to PROJECT_SPEC.md directly. No schema or generator
-changes needed — definitions-only fix.
+For products with very short lead times (1–2 days), the generated early/on-time delivery offset (`random.randint(-3, 0)`) could produce an Actual_Delivery_Date before the Order_Date.
 
----
+This was physically impossible, not a legitimate business anomaly.
 
-## 2026-09-19 — Removed CHANGELOG.md
+- Initially affected 599 of approximately 19,300 rows.
+- Corrected the generator so the early-delivery offset cannot exceed the product's lead time.
+- After the correction, only the intentionally injected bad-date records remained.
 
-**Decision:** Delete `CHANGELOG.md`.
+**Finding 2: Unrealistic Manufacturing line values**
 
-**Why:** It was duplicating content already in DECISIONS.md — same bug
-narratives, same specifics — without serving a distinct purpose. Commit
-history already covers "what changed, when"; DECISIONS.md covers "why."
-No reason to maintain a third overlapping history.
+Unit cost and quantity were initially generated independently.
 
-**Fix:** Removed the file. Going forward: "what happened" lives in
-commit history, "why" lives here.
+For low-cost, high-volume components, a high unit-cost draw combined with a large quantity could produce an individual PO line exceeding $2.5M.
 
----
+This caused:
+- Approximately $1.26B in simulated two-year company spend.
+- Manufacturing accounting for approximately 76% of total spend.
 
-## 2026-10-04 — New finding: PO_Line_ID collisions (9 cases)
+**Implementation**
 
-**Decision:** Extended `01_data_quality.sql`'s duplicate check to also
-catch PO_Line_ID values that repeat with genuinely different data
-underneath — a different problem than the 128 full-row duplicates
-already found.
+Added a `CATEGORY_MAX_LINE_VALUE` guardrail. When a generated line exceeded its category-specific ceiling, quantity was capped before pricing.
 
-**What we found:** 9 PO_Line_ID values each show up on exactly 2 rows
-where the rest of the data doesn't fully match — meaning the ID got
-reused, not the row copied. Looked at all 9 by hand:
-- **8 cases** — every column matches except one, where one row has a
-  NULL or malformed value and the other has a valid one for that same
-  field (e.g. L005513: identical row, one copy just missing
-  Expected_Delivery_Date). Reads as the same real transaction with one
-  incomplete copy, not two unrelated PO lines.
-- **1 case (L014440)** — both rows have valid-looking but different
-  Actual_Delivery_Date values (2025-02-08 vs 2025-02-13), everything
-  else identical. Initially logged as unresolvable — see correction
-  below.
+**Verified result**
 
-**Fix (applied in `02_data_cleaning.sql`):** For each pair, keep the
-row with no NULL/malformed/impossible values and drop the other. Not
-inventing data — just picking the more complete of two rows describing
-the same event.
+Completed spend after the correction was approximately $503M over two years, or approximately $252M annually.
 
-**Why this matters:** this is a genuinely new pattern — an ID collision
-overlapping with a missing/conflicting value — not something the first
-audit pass caught. Documenting it before fixing it keeps the audit
-(01_data_quality.sql) and the fix (02_data_cleaning.sql) honest with
-each other.
+This was considered a reasonable synthetic scale for a manufacturer with approximately 1,000 employees purchasing both production materials and corporate supplies.
 
-**Status:** Detection query added to `01_data_quality.sql`. Fix applied
-in `02_data_cleaning.sql`.
+**Why it matters**
+
+Both issues were generator defects, not meaningful procurement findings. Fixing them at the source prevents unrealistic conditions from distorting subsequent analysis.
+
+**Status:** Complete. Generator inspected and accepted. The approximately $250M annual spend assumption remains a design choice, not a real-world benchmark.
+
+See `documentation/methodology.md`.
 
 ---
 
-## 2026-10-04 — Correction: L014440 is resolvable, not a genuine conflict
+## 2026-09-18 — KPI Grain Clarification: Delivery Metrics Defined at PO-Line Level
 
-**Decision:** Revise the entry above — L014440 was incorrectly
-classified as an unresolvable value conflict.
+**Decision**
 
-**What we missed the first time:** Closer inspection shows L014440's
-two Actual_Delivery_Date values aren't actually an unresolvable tie. One
-(2025-02-08) falls before the row's own Order_Date (2025-02-10) —
-physically impossible, using the same delivery-before-order rule already
-established in `01_data_quality.sql` section 5. The other (2025-02-13)
-is valid. This resolves the same way as the other 8 collision cases, not
-as a special case.
+Explicitly define delivery KPIs at PO-line grain to match the fact table.
 
-**Fix:** Added a 5th check to the collision-resolution logic in
-`02_data_cleaning.sql` — "Actual_Delivery_Date before Order_Date" —
-reusing the delivery-before-order rule. All 9 collision pairs now
-resolve uniformly through one scoring rule; no row-merging or
-null-override logic needed for L014440 after all.
+**Finding**
 
-**Why this matters:** good reminder to actually check the data before
-calling something unresolvable — this one just needed the right rule
-applied, not a judgment call.
+A purchase order can contain multiple product lines with different delivery outcomes.
 
-**Status:** Logic corrected before being built into `02_data_cleaning.sql`,
-so the wrong version never made it into the actual pipeline.
+For example, one PO could contain two lines delivered on time and another delivered late. Calling the entire PO either on time or late would be ambiguous without an additional aggregation rule.
 
----
+**Implementation**
 
-## 2026-10-04 — Checkpoint 3: 02_data_cleaning.sql built and verified
+Updated `PROJECT_SPEC.md` to:
 
-**Decision:** Build `dbo.fact_purchase_orders` from
-`stg_fact_purchase_orders` — dedup, PO_Line_ID collision resolution,
-type conversion (DATE/DECIMAL on raw nvarchar columns), and Currency/
-PO_Status standardization, all in one script.
+- Define `fact_purchase_orders` as one row per PO line.
+- Calculate On-Time Delivery % using eligible Completed PO lines.
+- Calculate Average Days Late using late Completed PO lines.
+- Define PO Count separately using `COUNT(DISTINCT PO_ID)`.
 
-**Approach:**
-- Dedup via `ROW_NUMBER()` partitioned on all 12 columns, keeping `rn = 1`.
-- Collision resolution via a per-row "badness score" (count of NULL/
-  malformed/impossible values across Unit_Price, Quantity, Order_Date,
-  Expected_Delivery_Date, Actual_Delivery_Date-before-Order_Date),
-  keeping the row with `badness_score = 0` for each of the 9 known
-  collision IDs, leaving all other rows untouched regardless of score.
-- Currency/PO_Status standardized via CASE WHEN ('US Dollar' → 'USD',
-  'Canceled' → 'Cancelled').
-- Raw text values cast to real types (DATE, DECIMAL(10,2)) on insert.
-- Invalid values on otherwise-unique rows are NOT deleted, per the
-  inclusion-rules philosophy in PROJECT_SPEC.md. Malformed text (e.g.
-  the impossible date "2024-13-45") converts to NULL; negative and zero
-  numeric values (Quantity, Unit_Price) convert normally and stay in the
-  table as-is, so analysis queries exclude them explicitly. Only rows
-  with a verified full-row duplicate or a resolvable ID collision get
-  removed, since those are the only cases where a row is confirmed to
-  have an intact "backup" elsewhere in the data.
+**Why it matters**
 
-**Verified:**
-- Final row count: 19,579 (19,716 − 128 duplicates − 9 collision-pair
-  excess rows).
-- Currency: single value, USD, across all rows.
-- PO_Status: exactly 3 values (Completed, Open, Cancelled) — no
-  "Canceled" remaining.
-- No PO_Line_ID appears more than once.
-- 14 rows have Order_Date = NULL — matches the 16 malformed dates found
-  in 01_data_quality.sql minus the 2 that were also collision cases
-  (now resolved). These 14 are kept, not deleted, per the invalid-values
-  philosophy above.
+The fact table was already designed correctly. The issue was that the original KPI wording did not clearly communicate the calculation grain.
 
-**Note:** mid-build, the INSERT was accidentally run 5 times (97,895
-rows instead of 19,579) before being caught by cross-checking the row
-count against the Currency/PO_Status group-by totals. Fixed via
-TRUNCATE + single re-run. INSERT isn't idempotent: re-running it
-doesn't overwrite, it adds on top. **Permanent fix:** every table in
-`02_data_cleaning.sql` now starts with `DROP TABLE IF EXISTS`, so the
-whole script can be re-run safely and always rebuilds from scratch.
+Resolving this before analytical SQL was written prevented inconsistencies between business requirements and implementation.
 
-**Status:** `dbo.fact_purchase_orders` complete and verified. The four
-dimension tables are covered in the entry below.
+**Status:** Complete. Definitions updated; no schema or generator changes required.
 
 ---
 
-## 2026-10-19 — Dimension tables built (dim_department, dim_vendor, dim_product, dim_date)
+## 2026-09-19 — CHANGELOG.md Removed
 
-**Decision:** Build the four dimension tables from their staging tables
-with real types and primary keys, using DROP/CREATE/INSERT so the
-script is safe to re-run.
+**Decision**
 
-**What we checked first:** duplicate IDs, blank/NULL fields, values that
-fail type conversion, stray whitespace, spelling consistency in
-categorical columns, date-table coverage, and orphan keys (fact rows
-with no matching dimension row).
+Remove `CHANGELOG.md`.
 
-**Findings:** none. All four dimension tables were clean: no duplicate
-IDs, no blanks, no failed conversions, no padded text, no spelling
-variants in any categorical column, a complete 731-day date range
-(2024-01-01 to 2025-12-31), and zero orphan keys between the fact table
-and each dimension. The data-quality issues in this project were
-injected into the fact data only.
+**Why**
 
-**Approach:** unlike the fact table, no dedup or collision logic was
-needed. Text columns are trimmed on load; dates, costs, and calendar
-numbers are converted to real types. Primary keys on each dimension's
-ID column act as a safeguard, so a duplicate ID would make the load
-fail instead of loading silently.
+The file duplicated information already maintained in `DECISIONS.md`.
 
-**Verified:** row counts of 9 / 41 / 107 / 731, no NULLs introduced by
-conversion. The full `02_data_cleaning.sql` was then re-run top to
-bottom and reproduced all five row counts (19,579 / 9 / 41 / 107 / 731).
+Maintaining separate documents for the same technical history created unnecessary overhead.
 
-**Things to remember for analysis:**
-- All 41 vendors are Active, so Vendor_Status can't distinguish vendors.
-  Vendor comparisons have to come from delivery and pricing behavior.
-- Vendor_Category and Product_Category share the same 7 labels, so
-  category-level spend analysis needs no mapping.
-- dim_date's Week column appears to count simple 7-day blocks from
-  January 1, not ISO weeks. Fine for this project, but worth checking
-  before using it in any week-over-week analysis.
+Going forward:
+- Git commit history records what changed.
+- `DECISIONS.md` explains why decisions were made and what was learned.
 
-**Status:** Checkpoint 3 (SQL cleaning) complete. Next:
-`03_spend_analysis.sql`.
+**Status:** Complete.
 
 ---
 
-## 2026-10-26 — Spend analysis: end-of-data artifact in Completed-only spend
+## 2026-10-04 — Data Quality Discovery: PO_Line_ID Collisions
 
-**Decision:** Keep the Completed-only definition for spend KPIs
-(PROJECT_SPEC.md), but document and flag the effect it has on the most
-recent months.
+**Decision**
 
-**What we found:** Monthly Completed spend runs about $17M-$27M, then
-drops to $11.9M in December 2025 (197 POs vs. 300-400 in a normal
-month). Total order lines that month (863) are in line with September
-and October (910, 929), but Open lines jump from 30 (Sep) to 387 (Dec).
-Orders placed late in the window haven't been delivered by the data's
-end date, so they never reach Completed. December Completed + Open
-spend is about $21.0M, a normal month.
+Extend `01_data_quality.sql` to detect reused PO_Line_ID values with conflicting underlying records, rather than checking only for exact duplicate rows.
 
-**Impact:** the December 2025 dip is a reporting artifact, not a
-purchasing slowdown. Year-over-year growth on Completed spend (+1.5%) is
-understated; on Completed + Open (ordered spend) it is +4.62%, from $260.17M in 2024 to
-$272.19M in 2025 (section 10 of `03_spend_analysis.sql`).
+**Finding**
 
-**Handling:** dashboard trend visuals should flag or footnote the last
-1-2 months, and show Open spend separately as pipeline. Spend KPIs stay
-on Completed lines only.
+Nine PO_Line_ID values appeared twice with differences in the underlying data.
 
-**Also noted:**
-- Completed spend totals $499.65M (about 0.7% below the ~$503M
-  generator estimate, consistent with duplicates and invalid lines
-  being removed). Average PO value is $62,347 across 8,014 POs and 41
-  vendors.
-- The validity rule (Quantity > 0 AND Unit_Price > 0) excludes at most
-  239 of 17,739 Completed lines (about 1.3%).
-- 9 Completed lines ($163,568) have a NULL Order_Date and drop out of
-  time-based queries only. Yearly spend plus that amount reconciles to
-  the total to the cent.
-- About $12.3M of 2024 orders are still Open at the end of 2025. That is
-  a question for the operational analysis, not a finding yet.
-- Software is 27.9% of spend (about $70M/yr), which is high for a
-  ~1,000-person manufacturer. It likely reflects generator settings, in
-  the same family as the ~$250M/yr assumption, and belongs in the
-  limitations section of the final writeup.
+Manual inspection identified:
 
-**Correction to an earlier statement:** the Checkpoint 3 entry
-originally said invalid values convert to NULL. Only malformed text
-does; negative and zero numbers stay in the table and are excluded at
-analysis time. That entry and the `02_data_cleaning.sql` header were
-corrected.
+- **Eight cases:** One record contained a NULL or malformed value where the other contained a valid value.
+- **One case (L014440):** Both records contained apparently valid but different Actual_Delivery_Date values.
 
-**Status:** `03_spend_analysis.sql` complete. Next:
-`04_vendor_performance.sql`.
+The nine cases represented reused identifiers, not ordinary full-row duplicates.
+
+**Implementation**
+
+Added collision detection to `01_data_quality.sql`.
+
+The intended cleaning approach was to retain the more complete record for each pair.
+
+**Why it matters**
+
+A duplicate identifier does not necessarily mean two identical records.
+
+Distinguishing exact duplicates from conflicting identifier reuse makes the cleaning process more transparent and defensible.
+
+**Status:** Detection implemented. Resolution logic corrected in the following entry.
 
 ---
 
-## 2026-11-02 — Vendor performance: delivery KPIs and a calendar-coverage gap
+## 2026-10-04 — Correction: L014440 Was Resolvable
 
-**Decision:** Compute delivery KPIs at PO-line grain on Completed lines
-with valid Expected and Actual dates, and never join delivery dates to
-dim_date.
+**Decision**
 
-**What we found (investigation candidates, not verdicts):**
-- Spend is moderately concentrated: the top 10 of 41 vendors hold 56.8%
-  of spend, 19 vendors cover 80%, HHI is 439 (even split ~244). No
-  vendor or category is dominated by one supplier (largest category
-  leader: 37.9%).
-- 8 single-source products hold 4.9% of spend; three consulting and
-  software products hold about 87% of that.
-- Overall on-time delivery is 75.8%, with 12.6 days late on average when
-  late. About half of late lines are 8+ days late.
-- On-time varies from 52.8% to 97.2% by vendor, much more than by
-  category (66%-82%), department (72%-79%) or region (Midwest is high
-  only because it holds 3 vendors, including the best large vendor).
-  This suggests delivery is mostly a vendor effect. That is a
-  hypothesis; it was not tested statistically.
-- The 15 vendors under 70% on-time hold 33.2% of spend.
+Correct the original classification of L014440 as an unresolvable conflict.
 
-**Exclusions:** 79 Completed lines have no Expected date and 12 were
-delivered before the order date. They are excluded at query time, not
-deleted (17,648 of 17,739 lines are usable).
+**Finding**
 
-**Calendar gap:** orders stop on 2025-12-31, but Completed deliveries run
-to 2026-04-19, and dim_date ends 2025-12-31. An inner join of delivery
-dates to dim_date silently dropped 158 lines (17,490 instead of 17,648).
-Fixed by deriving the delivery month from the date itself. This also
-corrects an earlier assumption: the data's real snapshot date is later
-than the last order date. The December 2025 conclusion in the 2026-10-26
-entry still holds.
+Closer inspection showed:
 
-**Caveats:** only delivered lines can be measured, so late orders still
-Open don't count against any vendor. The 2026 delivery months show very
-low on-time rates on tiny samples, most likely late-2025 orders that
-slipped; treat them with caution.
+- One Actual_Delivery_Date was February 8, 2025.
+- The corresponding Order_Date was February 10, 2025.
+- The second Actual_Delivery_Date was February 13, 2025.
 
-**Status:** `04_vendor_performance.sql` complete except Section 12's
-2026-04-19 results. Next: `05_pricing_analysis.sql`.
+The first delivery date was physically impossible because it preceded the order date.
+
+The second record was valid.
+
+**Implementation**
+
+Added a fifth condition to the collision-resolution scoring logic in `02_data_cleaning.sql`:
+
+`Actual_Delivery_Date < Order_Date`
+
+This allowed all nine collision pairs to be resolved using the same record-completeness approach.
+
+**Why it matters**
+
+The initial investigation reached the wrong conclusion because it had not applied the existing date-validity rule to both records.
+
+This is a useful reminder that data-quality conclusions should follow inspection and validation, not assumptions based on the first appearance of a conflict.
+
+**Status:** Complete. The incorrect resolution logic was corrected before being incorporated into the final cleaning pipeline.
 
 ---
 
-## 2026-11-02 — Scope check against real job postings: extensions to planned steps
+## 2026-10-04 — Checkpoint 3: SQL Cleaning Pipeline Built and Verified
 
-**Decision:** Compare the project plan against current postings for roles this project is meant to support (procurement analyst, supply chain analyst, BI/Power BI analyst), and extend planned steps where postings repeatedly ask for something the plan didn't cover. Optimize the existing project; don't start over or add unrelated work.
+**Decision**
 
-**What was reviewed:** roughly 15 individual postings plus several aggregated listing pages (Microsoft vendor spend, Broadridge procurement Power BI, Biomerics, Prime Data Centers, Howmet, Sensient, Book of the Month, SANAD/Nabors, and several BI analyst listings). It is a qualitative sample, not a statistical one. Some pages were templates or aggregators and were weighted lower. Many postings ask for 3+ years of experience; the project targets the junior-to-mid postings (about 1-3 years).
+Build the cleaned fact table, `dbo.fact_purchase_orders`, from `stg_fact_purchase_orders`.
 
-**Already covered by the plan:** SQL, Power BI dashboards, spend analysis, supplier performance (on-time delivery, concentration, single-source risk), KPI definitions, data-quality work, version control.
+The cleaning script handles deduplication, identifier collisions, data-type conversion, and categorical standardization.
 
-**Gaps found and where they now live:**
+**Implementation**
 
-| What postings ask for | Added to |
+`02_data_cleaning.sql` uses:
+
+- `ROW_NUMBER()` partitioned across all 12 columns to remove exact duplicate rows.
+- A per-row badness score to resolve the nine PO_Line_ID collisions.
+- `CASE WHEN` logic to standardize Currency and PO_Status.
+- Conversion of raw text values into DATE and DECIMAL types.
+- NULL conversion for malformed values that cannot be cast.
+
+The collision-resolution score evaluates:
+1. Missing or invalid Unit_Price.
+2. Missing or invalid Quantity.
+3. Missing or malformed Order_Date.
+4. Missing or malformed Expected_Delivery_Date.
+5. Actual_Delivery_Date preceding Order_Date.
+
+The more complete record is retained for the nine known collisions. Other records with invalid values remain in the table.
+
+**Important cleaning distinction**
+
+- Malformed text values that fail conversion become NULL.
+- Negative and zero numeric values convert normally and remain in the cleaned table.
+- Invalid values on otherwise unique records are not deleted.
+- Only verified exact duplicates and resolvable identifier collisions are removed.
+
+**Verified results**
+
+| Validation | Result |
+|---|---:|
+| Raw fact rows | 19,716 |
+| Exact duplicate rows removed | 128 |
+| Excess collision rows removed | 9 |
+| Final cleaned fact rows | 19,579 |
+| Remaining duplicate PO_Line_ID values | 0 |
+| Currency values | USD only |
+| PO_Status values | Completed, Open, Cancelled |
+| NULL Order_Date values | 14 |
+
+The 14 NULL Order_Date values reconcile to the 16 malformed dates originally detected in `01_data_quality.sql`, minus the two records resolved through identifier-collision cleaning.
+
+**Execution issue discovered**
+
+During development, the INSERT operation was accidentally executed five times, producing 97,895 rows instead of 19,579.
+
+Cross-checking row counts against Currency and PO_Status group totals exposed the problem.
+
+The table was rebuilt using TRUNCATE and a single INSERT execution.
+
+**Permanent improvement**
+
+Added `DROP TABLE IF EXISTS` before table creation so the cleaning pipeline can be rerun safely from scratch.
+
+**Why it matters**
+
+The cleaning process preserves questionable but potentially meaningful records while removing only confirmed duplicates and redundant collision records.
+
+The rebuild approach also makes the pipeline reproducible instead of dependent on manual database cleanup.
+
+**Status:** Complete. Fact table built and verified.
+
+---
+
+## 2026-10-19 — Dimension Tables Built and Validated
+
+**Decision**
+
+Build the four dimension tables from their respective staging tables using explicit data types, primary keys, and repeatable DROP/CREATE/INSERT logic.
+
+**Dimensions**
+
+- `dim_department`
+- `dim_vendor`
+- `dim_product`
+- `dim_date`
+
+**Validation performed**
+
+Before loading, each dimension was checked for:
+
+- Duplicate primary keys.
+- Missing or blank fields.
+- Failed type conversions.
+- Unnecessary whitespace.
+- Categorical spelling inconsistencies.
+- Date-table completeness.
+- Orphan fact-table keys.
+
+**Findings**
+
+All four dimensions passed validation.
+
+No duplicate IDs, missing required fields, failed conversions, padded text, or categorical spelling inconsistencies were found.
+
+There were also no orphan fact-table keys.
+
+**Verified row counts**
+
+| Table | Rows |
+|---|---:|
+| dim_department | 9 |
+| dim_vendor | 41 |
+| dim_product | 107 |
+| dim_date | 731 |
+
+The date dimension covers January 1, 2024 through December 31, 2025.
+
+The entire `02_data_cleaning.sql` script was rerun successfully, reproducing all five expected row counts.
+
+**Additional observations**
+
+- All 41 vendors are marked Active. Vendor_Status cannot distinguish vendors in this dataset.
+- Vendor_Category and Product_Category share the same seven category labels.
+- The Week column represents seven-day blocks beginning January 1, rather than ISO week numbering.
+
+**Why it matters**
+
+The dimension tables did not require the deduplication and collision-resolution logic used for the fact table.
+
+Primary keys provide an additional safeguard against duplicate dimension identifiers during future rebuilds.
+
+**Status:** Complete. Checkpoint 3 (SQL cleaning and dimensional modeling) passed.
+
+**Next:** `03_spend_analysis.sql`.
+
+---
+
+## 2026-10-26 — Spend Analysis: End-of-Data Effect Identified
+
+**Decision**
+
+Keep Completed-only spend as the primary financial KPI definition, but explicitly flag the distortion this creates in the most recent reporting periods.
+
+**Finding**
+
+December 2025 Completed spend drops to approximately $11.9M, compared with the usual monthly range of approximately $17M–$27M.
+
+However, total purchasing activity does not show a comparable decline.
+
+| Metric | September 2025 | October 2025 | December 2025 |
+|---|---:|---:|---:|
+| Total PO lines | 910 | 929 | 863 |
+| Open lines | 30 | — | 387 |
+
+December's Completed plus Open spend is approximately $21.0M, consistent with a normal purchasing month.
+
+The decline is therefore primarily an end-of-data effect: many late-period orders remain Open and are excluded from Completed-only spend.
+
+**Financial impact**
+
+| Metric | 2024 | 2025 |
+|---|---:|---:|
+| Completed-only year-over-year growth | | +1.5% |
+| Completed + Open ordered spend | $260.17M | $272.19M |
+
+Ordered-spend growth is approximately 4.62%.
+
+Completed-only growth understates the change in purchasing activity.
+
+**Handling**
+
+- Retain Completed-only spend for financial KPIs.
+- Use Completed plus Open spend when examining purchasing activity.
+- Display Open spend separately as pipeline.
+- Flag or footnote the final one to two months of Completed-only trend visuals.
+
+**Additional findings**
+
+- Completed spend: $499.65M.
+- Average PO value: $62,347.
+- Distinct Completed POs: 8,014.
+- Vendors with Completed purchasing activity: 41.
+- Invalid Quantity/Unit_Price records excluded: up to 239 of 17,739 Completed lines.
+- Nine Completed lines with NULL Order_Date represent $163,568 of otherwise eligible spend.
+
+The nine lines remain in overall spend totals but cannot be assigned to a valid time period.
+
+Yearly spend plus these nine lines reconciles to total spend.
+
+Approximately $12.3M of 2024 orders remain Open at the end of 2025. This was retained as an operational question rather than treated as a confirmed finding.
+
+**Category observation**
+
+Software accounts for approximately 27.9% of spend, or roughly $70M annually.
+
+This is a generated category distribution, not an industry benchmark.
+
+**Documentation correction**
+
+An earlier statement implied that negative and zero numeric values convert to NULL during cleaning.
+
+This was incorrect. Only malformed values that fail conversion become NULL. Negative and zero values remain in the cleaned table and are excluded by analytical filters.
+
+The decision log and cleaning-script header were corrected.
+
+**Why it matters**
+
+The distinction between purchasing activity and completed financial activity is important when interpreting trends.
+
+A reporting decline should not automatically be interpreted as a real reduction in procurement demand.
+
+**Status:** Complete. `03_spend_analysis.sql` verified.
+
+**Next:** `04_vendor_performance.sql`.
+
+---
+
+## 2026-11-02 — Vendor Performance: Delivery KPIs and Calendar-Coverage Gap
+
+**Decision**
+
+Calculate delivery KPIs at PO-line grain using Completed lines with valid Expected and Actual delivery dates.
+
+Do not use the existing `dim_date` relationship to filter delivery dates because the calendar does not cover the complete delivery period.
+
+**Findings: Supplier concentration**
+
+- Top 10 of 41 vendors account for 56.8% of spend.
+- 19 vendors account for 80% of spend.
+- HHI is 439, compared with approximately 244 under an equal distribution.
+- No vendor or category is dominated by a single supplier.
+- The largest category leader accounts for 37.9% of its category.
+
+Eight single-source products account for 4.9% of spend. Three consulting and software products represent approximately 87% of that single-source spend.
+
+**Findings: Delivery performance**
+
+- Overall on-time delivery: 75.8%.
+- Average delay among late lines: 12.6 days.
+- Approximately half of late lines are at least eight days late.
+- Vendor on-time performance ranges from 52.8% to 97.2%.
+- Category performance ranges from approximately 66% to 82%.
+- Department performance ranges from approximately 72% to 79%.
+
+Vendor-level differences appear larger than category, department, or regional differences.
+
+This suggests vendor-level investigation may be useful, but the apparent relationship was not statistically tested.
+
+**Vendor spend-share observation**
+
+The initial analysis reported that the 15 vendors below 70% on-time delivery held 33.2% of total spend.
+
+This figure requires reconciliation with a later README figure of 34.9%. Neither figure should be treated as final until the underlying SQL calculation and denominator are verified.
+
+**Delivery exclusions**
+
+Of 17,739 Completed lines:
+
+- 79 have no Expected_Delivery_Date.
+- 12 have Actual_Delivery_Date before Order_Date.
+- 17,648 remain eligible for delivery analysis.
+
+These records are excluded from the applicable KPI calculations, not deleted from the fact table.
+
+**Calendar-coverage issue**
+
+Order activity ends December 31, 2025, but Completed delivery records extend through April 19, 2026.
+
+The existing `dim_date` table also ends December 31, 2025.
+
+An earlier inner join between Actual_Delivery_Date and `dim_date` silently excluded 158 valid delivery records, reducing the analytical population from 17,648 to 17,490.
+
+**Implementation**
+
+Changed the delivery analysis to derive delivery periods directly from Actual_Delivery_Date.
+
+This preserves all 17,648 eligible lines.
+
+The existing `dim_date` relationship remains based on Order_Date.
+
+**Caveats**
+
+- Only delivered Completed lines are measured.
+- Overdue orders still marked Open do not count against vendor on-time performance.
+- The 2026 delivery months have relatively small samples and potentially reflect late-2025 orders that slipped.
+- Regional comparisons require caution because the Midwest contains only three vendors.
+
+**Why it matters**
+
+A technically valid relationship can still produce an incomplete analytical population when its date coverage is insufficient.
+
+The issue was discovered by reconciling row counts rather than relying on the query to execute successfully.
+
+**Status:** Core delivery and concentration analysis complete. Section 12's Open-order aging analysis was subsequently documented on November 10.
+
+---
+
+## 2026-11-02 — Project Scope Reviewed Against Job Postings
+
+**Decision**
+
+Compare the existing project plan against approximately 15 individual job postings and several aggregated listings for procurement, supply chain, and BI analyst positions.
+
+Extend the existing project where recurring job requirements reveal meaningful gaps. Do not restart the project or introduce unrelated technical work.
+
+This was a qualitative review, not a statistical labor-market study.
+
+**Skills already covered**
+
+- SQL.
+- Spend analysis.
+- Supplier performance.
+- Vendor concentration.
+- Data quality and validation.
+- KPI definitions.
+- Version control.
+- BI reporting plans.
+
+**Identified gaps and corresponding deliverables**
+
+| Employer requirement | Project addition |
 |---|---|
-| Savings opportunity sizing, business cases, savings trackers | `06_opportunity_analysis.sql` (low/base/high ranges with stated assumptions); Excel savings tracker |
-| Purchase price variance (PPV) | `05_pricing_analysis.sql` reports PPV in dollars |
-| Supplier scorecards | `06_opportunity_analysis.sql` weighted scorecard, weights documented |
-| Past-due / delayed-line reporting | `06_opportunity_analysis.sql` Open-lines exception report |
-| Advanced Excel / Power Query | `excel/savings_opportunity_model.xlsx` (makes the README stack line true) |
-| DAX, semantic models, row-level security, Power BI Service | Power BI build: measures table, time intelligence, RLS, publish to Service |
-| Requirements gathering and UAT | `documentation/uat_plan.md`: traceability table and reconciliation test log |
-| Forecasting (supply-chain roles; some procurement roles) | `07_spend_forecast.sql`: baseline forecast with holdout backtest (MAPE, bias) |
-| Communicating findings to stakeholders | One-page executive brief; headline findings and screenshot at top of README |
+| Savings opportunity sizing | `06_opportunity_analysis.sql` |
+| Savings business cases and tracking | Excel savings opportunity model |
+| Purchase Price Variance | `05_pricing_analysis.sql` |
+| Supplier scorecards | `06_opportunity_analysis.sql` |
+| Past-due purchasing reports | Open-line exception analysis |
+| Advanced Excel / Power Query | `excel/savings_opportunity_model.xlsx` |
+| DAX and semantic modeling | Power BI measures and model |
+| Row-level security and Power BI Service | Power BI implementation |
+| Requirements gathering and UAT | `documentation/uat_plan.md` |
+| Forecasting | `07_spend_forecast.sql` |
+| Stakeholder communication | One-page executive brief |
 
-**Deliberately not added:** inventory/MRP analysis, contract compliance and maverick spend, OTIF (the data has no received-quantity field, so the project reports on-time delivery and says so), ML models, and cloud data platforms. The dataset can't support these without regenerating it, which would undo validated work. They go in the limitations section instead.
+**Deliberately excluded**
 
-**Caveats:** with only 24 monthly points, the forecast demonstrates method and backtesting discipline, not predictive power. The savings ranges come from synthetic data, so they illustrate the approach rather than real opportunity.
+- Inventory and MRP.
+- Contract compliance.
+- Maverick-spend analysis.
+- OTIF.
+- Machine-learning forecasting.
+- Cloud data platforms.
 
-**Status:** TASKS.md updated with the new items under NEXT. No changes to existing scripts.
+The current synthetic dataset does not support these areas reliably without additional data generation and revalidation.
 
----
+**Caveats**
 
-## 2026-11-10 — Open-order aging: Open status is a generator artifact, not a backlog finding
+The forecast has only 24 monthly observations. Savings scenarios rely on synthetic pricing data and assumed recovery rates.
 
-**Decision:** Keep the overdue Open-line analysis (Section 12 of
-`04_vendor_performance.sql`) as an illustrative past-due report, not a
-business finding. Age Open lines as of 2025-12-31 (primary view) and
-2026-04-19 (sensitivity).
+These deliverables demonstrate analytical methods, not real-world financial results.
 
-**Why two reference dates:** PO_Status was assigned by the generator as
-of 2025-12-31, but Completed lines carry delivery dates through
-2026-04-19 (the latest Completed Actual_Delivery_Date, which is how the
-query derives its as-of date). These can't describe the same moment, so
-both views are shown. This revises the 2026-11-02 wording about a "later
-snapshot": it's a generator inconsistency.
+**Why it matters**
 
-**Results (1,216 Open lines with an expected date, $32,855,041):**
-- As of 2025-12-31: 151 lines ($4.34M) not yet due; 1,065 lines
-  ($28.51M) overdue — 260 / $6.29M at 1-30 days, 103 / $2.42M at 31-90,
-  100 / $2.91M at 91-180, 602 / $16.89M at 180+.
-- As of 2026-04-19: all 1,216 lines overdue — 15 / $0.94M at 31-90,
-  472 / $11.50M at 91-180, 729 / $20.42M at 180+.
+The project should demonstrate capabilities employers repeatedly request without becoming an unrealistic imitation of an enterprise procurement system.
 
-**Why it isn't a finding:** in `generate_data.py`, PO_Status is drawn by
-order recency only (60% Open in the last 20 days of the window, 20% for
-the next 25 days, 4% for everything older). Vendor and expected delivery
-date play no role, so the 180+ lines are old orders the generator never
-closes, and the recent buckets are the recency-based Open rate measured
-against a reference date. The top 10 vendors by overdue Open spend hold
-56.7% of overdue spend at 12/31, close to their overall spend share
-(56.8%), consistent with the ranking reflecting vendor size, not vendor
-behavior. Vendor on-time % is unaffected (Completed lines only).
-
-**Handling:** keep the aging buckets and exception report in
-`06_opportunity_analysis.sql` as a method demonstration, labeled
-illustrative; list Open-status assignment under limitations.
+**Status:** Scope additions incorporated into `TASKS.md`.
 
 ---
 
-## 2026-11-16 — Opportunity analysis: price-leakage sizing and supplier scorecard
+## 2026-11-10 — Open-Order Aging: Generator Status Is Not a Backlog Finding
 
-**Decision:** Size price leakage as the dollars paid above the product-level
-median on vendor-product pairs (10+ lines, index over 1.05), report it as
-a ceiling plus low/base/high cases, and score vendors on a weighted
-composite. All figures are two-year totals on synthetic data.
+**Decision**
 
-**Results (`06_opportunity_analysis.sql`):**
-- 96 flagged pairs (19 vendors, 81 products); gap ceiling $17.32M (3.47% of
-  spend). Assuming 25/50/75% recovery: $4.33M / $8.66M / $12.99M. Excluding
-  vendors at 85%+ on-time, the base case is $5.32M. Manufacturing and
-  Software hold 74% of the ceiling.
-- Five vendors are both above benchmark and under 70% on-time (Lakeside,
-  Lighthouse, Pinnacle, Anchor, Ironclad): $89.8M of spend (18%) and about
-  $8.2M of the ceiling.
-- Scorecard weights (judgment): on-time 40%, days late 20%, price 30%,
-  concentration 10%; metrics min-max scaled across vendors.
-- Tail: 22 vendors hold 19.3% of spend (avg $4.4M each); not fragmented
-  enough to support a consolidation claim.
+Retain the Open-order aging analysis in `04_vendor_performance.sql` as an illustrative exception report, not a confirmed supplier-backlog finding.
 
-**Caveats:** realization rates are assumptions; the median is a midpoint on
-2-vendor products; delivery risk is not valued in dollars (no delay-cost
-data); overdue Open lines remain illustrative (see 2026-11-10).
+Calculate aging using two reference dates:
+
+- December 31, 2025 — primary view.
+- April 19, 2026 — sensitivity view.
+
+**Why two dates are necessary**
+
+The generator assigns PO_Status primarily according to order recency as of December 31, 2025.
+
+However, Completed lines contain delivery dates extending through April 19, 2026.
+
+These dates do not describe a consistent operational snapshot.
+
+This corrects the earlier November 2 wording that suggested the dataset had a later overall snapshot date.
+
+**Results**
+
+The analysis identifies 1,216 Open lines with an Expected_Delivery_Date, representing $32,855,041.
+
+| Aging bucket | As of Dec. 31, 2025 | As of Apr. 19, 2026 |
+|---|---:|---:|
+| Not yet due | 151 lines / $4.34M | 0 |
+| 1–30 days | 260 lines / $6.29M | 0 |
+| 31–90 days | 103 lines / $2.42M | 15 lines / $0.94M |
+| 91–180 days | 100 lines / $2.91M | 472 lines / $11.50M |
+| 180+ days | 602 lines / $16.89M | 729 lines / $20.42M |
+| Total | 1,216 lines / $32.86M | 1,216 lines / $32.86M |
+
+**Generator behavior discovered**
+
+In `generate_data.py`, PO_Status is assigned primarily by order recency:
+
+- 60% Open in the last 20 days of the window.
+- 20% Open in the preceding 25 days.
+- 4% Open for older orders.
+
+Vendor identity and Expected_Delivery_Date do not determine the status assignment.
+
+Consequently, many older Open orders remain Open because the generator does not simulate a realistic order-closing process.
+
+**Additional validation**
+
+The top 10 vendors account for 56.7% of overdue Open spend as of December 31, 2025, almost identical to their 56.8% share of overall spend.
+
+This supports the interpretation that the ranking largely reflects vendor purchasing volume rather than demonstrated supplier behavior.
+
+Vendor on-time performance is unaffected because it uses Completed lines only.
+
+**Handling**
+
+- Retain aging buckets and exception reporting.
+- Label the report illustrative.
+- Show the reference date prominently.
+- Include the generator limitation in the final project documentation.
+
+**Why it matters**
+
+A large overdue Open-order balance may look like an important operational finding, but the synthetic status-generation logic does not support that conclusion.
+
+Understanding how the data was generated is necessary before making a business recommendation.
+
+**Status:** Analysis complete. Generator limitation documented.
 
 ---
 
-## 2026-11-16 — Spend forecast: backtest at two origins
+## 2026-11-16 — Opportunity Analysis: Price-Leakage Sizing and Supplier Scorecard
 
-**Decision:** Forecast monthly ordered spend (Completed + Open) for
-2026-01 to 2026-06 with the 6-month average (ma6), chosen on pooled
-backtest WAPE across two origins.
+**Decision**
 
-**What we found:** the first backtest (train through 2025-06, test
-Jul-Dec 2025) favored seasonal_naive (WAPE 7.1% vs 9.7% for flat methods).
-Seasonality is only repeatable in Jul-Dec (2024 vs 2025 monthly profile
-correlation: 0.67 Jul-Dec, 0.06 Jan-Jun), and the forecast horizon is
-Jan-Jun. A second origin (train through 2024-12, test Jan-Jun 2025) ranked
-seasonal_naive worst (WAPE 13.1%) and ma6 best (5.7%). Pooled over 12 holdout months, ma6 had the lowest WAPE (7.69%, bias +0.25%),
-just ahead of mean_all (7.93%). Forecast for Jan-Jun 2026: $22.40M/month
-(about $134.4M total), rough band $20.66M-$24.14M (pooled MAE; 7 of 12
-backtest actuals fell inside it). The method assumes no trend.
+Estimate potential price leakage using vendor-product pairs with sufficient purchasing history and prices above the product-level median.
 
-**Caveats:** 24 monthly points and 12 holdout points; choosing a method
-after seeing the holdout is mildly optimistic; four flat methods tie on
-MAE in the Jul-Dec test (3 actuals below ~$21M, 3 above ~$24M). The forecast
-demonstrates method, not predictive power.
+The analysis uses:
+
+- Minimum 10 PO lines per vendor-product pair.
+- Price index greater than 1.05.
+- Positive purchase price variance.
+- Low/base/high recovery scenarios of 25%, 50%, and 75%.
+
+The results represent two years of synthetic purchasing activity.
+
+**Pricing methodology**
+
+The primary benchmark is the observed median unit price for each product across valid Completed purchasing activity from both years and all vendors.
+
+`Price Index = Observed Vendor Price / Product Median Price`
+
+The opportunity analysis identifies pairs where the vendor price index exceeds 1.05.
+
+The median is a relative comparison benchmark, not a verified fair market price.
+
+**Results**
+
+| Metric | Result |
+|---|---:|
+| Flagged vendor-product pairs | 96 |
+| Vendors represented | 19 |
+| Products represented | 81 |
+| Theoretical price-gap ceiling | $17.32M |
+| Gap as a share of total spend | 3.47% |
+| Low recovery scenario | $4.33M |
+| Base recovery scenario | $8.66M |
+| High recovery scenario | $12.99M |
+
+Manufacturing and Software account for approximately 74% of the theoretical price-gap ceiling.
+
+Excluding vendors with on-time performance of 85% or higher, the base scenario is approximately $5.32M.
+
+**Combined pricing and delivery observation**
+
+Five vendors are both above the product benchmark and below 70% on-time delivery:
+
+- Lakeside.
+- Lighthouse.
+- Pinnacle.
+- Anchor.
+- Ironclad.
+
+Together, they represent approximately $89.8M in spend (18%) and $8.2M of the theoretical price-gap ceiling.
+
+These suppliers warrant further investigation. The analysis does not establish that their prices are unreasonable or that their delivery performance is caused by supplier behavior.
+
+**Supplier scorecard**
+
+The initial composite scorecard uses the following judgment-based weights:
+
+| Metric | Weight |
+|---|---:|
+| On-time delivery | 40% |
+| Average days late | 20% |
+| Price performance | 30% |
+| Supplier concentration | 10% |
+
+Metrics are min-max scaled across vendors.
+
+The weighting prioritizes delivery reliability while still recognizing pricing and concentration risk.
+
+The scorecard should clearly explain the direction of each metric, the normalization method, and the treatment of missing or insufficient observations before being presented as a final vendor ranking.
+
+**Supplier tail**
+
+- 22 vendors account for 19.3% of spend.
+- Average spend per vendor is approximately $4.4M.
+
+The remaining spend is not sufficiently fragmented to support an automatic supplier-consolidation recommendation.
+
+**Caveats**
+
+- Recovery rates are assumptions, not measured savings.
+- The $17.32M gap is a theoretical ceiling, not achievable savings.
+- The median for a two-vendor product is simply the midpoint between two observed prices.
+- Delivery risk is not converted into dollars because the dataset lacks delay-cost information.
+- Open-order aging remains illustrative, as documented on November 10.
+
+**Why it matters**
+
+The analysis moves beyond descriptive reporting by translating price differences into transparent opportunity scenarios.
+
+It also combines pricing and delivery metrics to identify vendors that may warrant more detailed procurement review.
+
+**Status:** Core opportunity analysis and scorecard calculations documented. Scorecard direction and normalization should be explicitly validated in the final reporting documentation.
+
+---
+
+## 2026-11-16 — Spend Forecast: Method Selected Using Two Backtest Origins
+
+**Decision**
+
+Forecast monthly ordered spend (Completed + Open) for January through June 2026 using a six-month moving average (`MA6`).
+
+The method was selected based on pooled WAPE across two historical backtest origins.
+
+**Why ordered spend**
+
+Completed-only spend is affected by the end-of-data artifact described on October 26.
+
+Using Completed plus Open purchasing activity better represents the monthly value of orders placed and provides a more consistent basis for the exploratory forecast.
+
+**Backtest methodology**
+
+Two historical forecast origins were evaluated.
+
+| Backtest | Training period | Holdout period |
+|---|---|---|
+| Origin 1 | Through June 2025 | July–December 2025 |
+| Origin 2 | Through December 2024 | January–June 2025 |
+
+**Findings**
+
+The first backtest favored Seasonal Naive:
+
+- Seasonal Naive WAPE: 7.1%.
+- Flat-method comparison: 9.7%.
+
+However, seasonality was not consistent across the full year.
+
+The monthly profile correlation between 2024 and 2025 was:
+
+- July–December: 0.67.
+- January–June: 0.06.
+
+The second backtest, covering January–June 2025, ranked Seasonal Naive worst at 13.1% WAPE and MA6 best at 5.7%.
+
+**Pooled results**
+
+Across the 12 holdout months:
+
+| Method | Pooled WAPE |
+|---|---:|
+| MA6 | 7.69% |
+| Mean of all historical months | 7.93% |
+
+MA6 also had a pooled bias of +0.25%.
+
+The difference between MA6 and the all-history mean is small, but MA6 had the lowest pooled WAPE among the evaluated methods.
+
+**Forecast**
+
+The January–June 2026 forecast is approximately:
+
+- $22.40M per month.
+- $134.4M across six months.
+- Rough range: $20.66M–$24.14M per month.
+
+The rough range uses pooled MAE, and 7 of the 12 historical holdout actuals fell inside it.
+
+**Limitations**
+
+- Only 24 monthly observations are available.
+- The evaluation uses 12 holdout observations.
+- Method selection occurred after reviewing the holdout results, introducing some selection bias.
+- Four flat methods tie on MAE in the July–December backtest.
+- The method assumes no underlying trend.
+- Historical backtest performance does not guarantee future accuracy.
+
+**Why it matters**
+
+The forecast demonstrates a structured approach to selecting and evaluating a baseline forecasting method instead of choosing a technique based on appearance or complexity.
+
+The results should be communicated as an exploratory estimate, not a reliable production forecast.
+
+**Status:** Forecast analysis and two-origin backtesting complete.
+
+---
+
+## 2026-11-17 — Documentation Consistency Review
+
+**Decision**
+
+Reconcile the project specification, data dictionary, decision log, README, and task tracker before finalizing the portfolio documentation.
+
+The purpose is to ensure that each document describes the same analytical implementation and that historical assumptions are not mistaken for current methodology.
+
+**Items reviewed**
+
+- Business requirements and project scope.
+- Fact table grain and KPI definitions.
+- Cleaning logic and verified table counts.
+- Date coverage and delivery-date treatment.
+- Vendor and product benchmark methodology.
+- Spend and delivery eligibility rules.
+- Savings opportunity sizing.
+- Supplier scorecard methodology.
+- Forecast selection and limitations.
+
+**Outstanding verification items**
+
+1. **Vendor underperformance spend share:** The November 2 analysis reports 33.2%, while the current README reports 34.9%. Reconcile the SQL query, vendor population, threshold, and spend denominator before selecting the final number.
+
+2. **Supplier scorecard:** Confirm metric direction, normalization, and missing-observation handling. The documented weights are judgment-based and should not be presented as statistically optimized.
+
+3. **Date modeling:** The SQL delivery analysis correctly avoids the incomplete 2024–2025 date dimension. The future Power BI model must support delivery reporting through April 19, 2026.
+
+4. **Savings assumptions:** Keep the $17.32M price-gap ceiling separate from the low/base/high recovery scenarios. Do not describe any of these values as realized savings.
+
+5. **Implementation status:** Planned Excel and Power BI deliverables must remain clearly distinguished from completed SQL work until the actual files and models are built and validated.
+
+**Why it matters**
+
+Documentation should make it possible for another analyst or interviewer to follow the project from business requirements through implementation and results without encountering conflicting definitions or unsupported claims.
+
+**Status:** Documentation review in progress. Outstanding items should be closed through source-query verification rather than editorial judgment.
+
+---
+
+## Documentation Maintenance Rules
+
+Going forward, use these standards when updating this log:
+
+1. Record meaningful changes to analytical methodology, data cleaning, KPI definitions, or business assumptions.
+2. Preserve corrections to earlier decisions rather than silently rewriting history.
+3. Distinguish verified results from hypotheses, estimates, and scenario assumptions.
+4. Include the SQL script or deliverable associated with a decision whenever applicable.
+5. Keep historical entries chronological and avoid duplicating the README's full project narrative.
+6. Update `PROJECT_SPEC.md` and `DATA_DICTIONARY.md` when a decision changes project requirements, data definitions, or calculation rules.
+7. Update `TASKS.md` when a decision creates, completes, or changes an implementation task.
+
+**Final standard:** Every important decision should be explainable, every reported number should be traceable to its source, and every limitation should be disclosed before the project is presented to stakeholders or employers.
